@@ -3388,26 +3388,26 @@
             <!-- SIDEBAR -->
             <aside class="msidebar">
                 <p class="msidebar-lbl">Cardápio</p>
-                <button class="mcat on" onclick="scrollSec('sushi')" id="mc-sushi"><span
-                        class="mcat-ico">🍣</span><span><span class="mcat-name">Sushi & Sashimi</span><span
+                <button class="mcat on" onclick="scrollSec('hotroll')" id="mc-hotroll"><span
+                        class="mcat-ico">🔥</span><span><span class="mcat-name">Sushi & Sashimi</span><span
                             class="mcat-jp">寿司・刺身</span></span><span class="mcat-n">8</span></button>
                 <button class="mcat" onclick="scrollSec('ramen')" id="mc-ramen"><span
                         class="mcat-ico">🍜</span><span><span class="mcat-name">Ramen & Udon</span><span
                             class="mcat-jp">ラーメン</span></span><span class="mcat-n">5</span></button>
-                <button class="mcat" onclick="scrollSec('tempura')" id="mc-tempura"><span
-                        class="mcat-ico">🍤</span><span><span class="mcat-name">Tempura</span><span
-                            class="mcat-jp">天ぷら</span></span><span class="mcat-n">4</span></button>
-                <button class="mcat" onclick="scrollSec('grelhados')" id="mc-grelhados"><span
-                        class="mcat-ico">🥩</span><span><span class="mcat-name">Grelhados</span><span
-                            class="mcat-jp">焼き物</span></span><span class="mcat-n">4</span></button>
-                <button class="mcat" onclick="scrollSec('entradas')" id="mc-entradas"><span
-                        class="mcat-ico">🥟</span><span><span class="mcat-name">Entradas</span><span
-                            class="mcat-jp">前菜</span></span><span class="mcat-n">5</span></button>
-                <button class="mcat" onclick="scrollSec('sobremesas')" id="mc-sobremesas"><span
-                        class="mcat-ico">🍡</span><span><span class="mcat-name">Sobremesas</span><span
-                            class="mcat-jp">デザート</span></span><span class="mcat-n">4</span></button>
+                <button class="mcat" onclick="scrollSec('nigiri')" id="mc-nigiri"><span
+                        class="mcat-ico">🍣</span><span><span class="mcat-name">Nigiri</span><span
+                            class="mcat-jp">握り寿司</span></span><span class="mcat-n">5</span></button>
+                <button class="mcat" onclick="scrollSec('sashimi')" id="mc-sashimi"><span
+                        class="mcat-ico">🐟</span><span><span class="mcat-name">Sashimi</span><span
+                            class="mcat-jp">刺身</span></span><span class="mcat-n">4</span></button>
+                <button class="mcat" onclick="scrollSec('joy')" id="mc-joy"><span class="mcat-ico">🌮</span><span><span
+                            class="mcat-name">Joy &amp; Temaki</span><span class="mcat-jp">ジョイ</span></span><span
+                        class="mcat-n">5</span></button>
+                <button class="mcat" onclick="scrollSec('combos')" id="mc-combos"><span
+                        class="mcat-ico">🎁</span><span><span class="mcat-name">Combos</span><span
+                            class="mcat-jp">コンボ</span></span><span class="mcat-n">5</span></button>
                 <button class="mcat" onclick="scrollSec('bebidas')" id="mc-bebidas"><span
-                        class="mcat-ico">🍶</span><span><span class="mcat-name">Bebidas</span><span
+                        class="mcat-ico">🥤</span><span><span class="mcat-name">Bebidas</span><span
                             class="mcat-jp">飲み物</span></span><span class="mcat-n">6</span></button>
             </aside>
             <!-- SCROLL -->
@@ -3573,73 +3573,78 @@
         // DATA
         // ════════════════════════════════
         const MENU = [
+            // ── HOT ROLL ──────────────────────────────────────────
             {
-                id: 'sushi', name: 'Sushi & Sashimi', jp: '寿司・刺身', ico: '🍣', items: [
-                    { id: 's1', name: 'Temaki Salmão', jp: 'サーモン手巻き', price: 32, desc: 'Cone de alga nori com arroz temperado, salmão fresco e cream cheese.', img: 'https://static.itdg.com.br/images/1200-675/774375583e3775acf3328a7c7a0a0470/303152-original.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Cream Cheese'] },
-                    { id: 's2', name: 'Sashimi Premium', jp: '刺身プレミアム', price: 78, desc: 'Fatias selecionadas de atum, salmão e robalo com daikon e wasabi fresco.', img: 'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Atum', 'Salmão', 'Robalo'] },
-                    { id: 's3', name: 'Uramaki Philadelphia', jp: 'フィラデルフィア', price: 42, desc: 'Roll invertido com salmão, cream cheese, pepino e gergelim dourado.', img: 'https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400&q=70', tags: [], meta: ['Salmão', 'Pepino'] },
-                    { id: 's4', name: 'Nigiri Atum', jp: 'まぐろ握り', price: 58, desc: 'Bolinhos de arroz com atum rubro, wasabi e shoyu da casa.', img: 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Atum', 'Wasabi'] },
-                    { id: 's5', name: 'Rainbow Roll', jp: 'レインボーロール', price: 65, desc: 'Uramaki coberto com salmão, atum, robalo e linguado.', img: 'https://static.wixstatic.com/media/596070_606c6d12320d433da323af56c2349ac8~mv2.jpg/v1/fill/w_568,h_428,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/596070_606c6d12320d433da323af56c2349ac8~mv2.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Atum'] },
-                    { id: 's6', name: 'Hotate Sashimi', jp: 'ホタテ刺身', price: 72, desc: 'Vieiras frescas fatiadas com ponzu cítrico, cebolinhas e flor de sal.', img: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Vieiras', 'Ponzu'] },
-                    { id: 's7', name: 'Dragon Roll', jp: 'ドラゴンロール', price: 68, desc: 'Camarão empanado, abacate, coberto com salmão e molho agridoce.', img: 'https://thesushiman.com/wp-content/uploads/2025/01/Dragon-Roll-1-scaled.jpg', badge: 'spicy', tags: ['spicy'], meta: ['Camarão', 'Abacate'] },
-                    { id: 's8', name: 'Gunkan Ouriço', jp: 'うにぐんかん', price: 85, desc: 'Gunkan com ouriço do mar fresco (uni) sobre arroz de sushi.', img: 'https://img.freepik.com/fotos-premium/ouricos-do-mar-sashimi-fresco-aberto-e-pronto-para-comer-no-gelo-no-mercado-de-peixes-de-kyoto-perto-de-deliciosos-frutos-do-mar-japoneses-tradicionais-na-barraca-a-venda-lanche-de-rua-de-loja-de-culinaria-e-viagens-gastronomicas-no-japao_352173-2922.jpg', badge: 'chef', tags: ['chef'], meta: ['Uni', 'Nori'] },
+                id: 'hotroll', name: 'Hot Roll', jp: 'ホットロール', ico: '🔥', items: [
+                    { id: 'h1', name: 'Hot Roll Salmão', jp: 'サーモン', price: 32, desc: '8 unidades de uramaki frito com salmão, cream cheese e cebolinha. Crocante por fora, cremoso por dentro.', img: 'https://djapa.com.br/wp-content/uploads/2022/05/hot-roll.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Cream Cheese', 'Frito'] },
+                    { id: 'h2', name: 'Hot Roll Camarão', jp: 'エビ', price: 34, desc: '8 unidades fritas com camarão empanado, cream cheese e molho especial da casa.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPAU2zvDH7pXjxSVRo1sDGB_wqqsSipJSCQw&s', badge: 'new', tags: ['new'], meta: ['Camarão', 'Cream Cheese', 'Frito'] },
+                    { id: 'h3', name: 'Hot Roll Atum', jp: 'マグロ', price: 33, desc: '8 unidades fritas com atum, cream cheese, pepino e gergelim tostado.', img: 'https://cdn0.tudoreceitas.com/pt/posts/4/3/5/hot_roll_com_cream_cheese_5534_600_square.jpg', tags: [], meta: ['Atum', 'Cream Cheese', 'Frito'] },
+                    { id: 'h4', name: 'Hot Roll Frango Grelhado', jp: 'チキン', price: 30, desc: '8 unidades com frango grelhado temperado, cream cheese e cebolinha crocante.', img: 'https://img.band.com.br/image/2024/10/22/hot-roll-171221.jpg', tags: [], meta: ['Frango', 'Cream Cheese'] },
+                    { id: 'h5', name: 'Hot Roll Skin', jp: 'スキン', price: 36, desc: '8 unidades com pele de salmão crocante, cream cheese e molho teriyaki.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiMVT4aBhJTKWWBFVDFaLt1NSQcQdL0Zld3A&s', badge: 'chef', tags: ['chef'], meta: ['Pele Salmão', 'Teriyaki'] },
                 ]
             },
+            // ── URAMAKI ───────────────────────────────────────────
             {
-                id: 'ramen', name: 'Ramen & Udon', jp: 'ラーメン・うどん', ico: '🍜', items: [
-                    { id: 'r1', name: 'Tonkotsu Egima', jp: '骨董スープ', price: 48, desc: 'Caldo de osso suíno cozido 18h, chashu, ovo marinado e nori.', img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Porco', 'Ovo'] },
-                    { id: 'r2', name: 'Shio Ramen', jp: '塩ラーメン', price: 44, desc: 'Caldo claro de frango e algas, frango desfiado e broto de feijão.', img: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?w=400&q=70', tags: [], meta: ['Frango', 'Alga'] },
-                    { id: 'r3', name: 'Miso Picante', jp: '辛味噌', price: 46, desc: 'Base de missô vermelho com togarashi, cogumelos shiitake e manteiga de alho.', img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=70', badge: 'spicy', tags: ['spicy'], meta: ['Missô', 'Shiitake'] },
-                    { id: 'r4', name: 'Kitsune Udon', jp: 'きつねうどん', price: 38, desc: 'Macarrão udon em caldo dashi suave com tofu frito e cebolinha.', img: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=70', tags: ['veg'], meta: ['Udon', 'Tofu'] },
-                    { id: 'r5', name: 'Black Garlic Ramen', jp: '黒にんにく', price: 52, desc: 'Tonkotsu com óleo de alho negro, barriga de porco e ovo de soja.', img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Alho Negro'] },
+                id: 'uramaki', name: 'Uramaki', jp: '裏巻き', ico: '🍱', items: [
+                    { id: 'u1', name: 'Uramaki Philadelphia', jp: 'フィラデルフィア', price: 38, desc: '8 unidades com salmão fresco, cream cheese e pepino, cobertos com gergelim dourado.', img: 'https://sushimusic.correka.com.br/_core/_uploads/144/2025/01/0047170125jgcic612ad.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Cream Cheese', 'Pepino'] },
+                    { id: 'u2', name: 'Uramaki Camarão Empanado', jp: 'エビフライ', price: 40, desc: '8 unidades com camarão empanado, abacate e cream cheese, cobertos com gergelim.', img: 'https://media-cdn.tripadvisor.com/media/photo-s/06/35/ea/4f/haru-sushi-bar.jpg', tags: [], meta: ['Camarão', 'Abacate'] },
+                    { id: 'u3', name: 'Uramaki Atum', jp: 'マグロ巻き', price: 38, desc: '8 unidades de arroz invertido com atum fresco, cebolinha e gergelim preto.', img: 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=400&q=70', tags: [], meta: ['Atum', 'Cebolinha'] },
+                    { id: 'u4', name: 'Uramaki Tropical', jp: 'トロピカル', price: 42, desc: '8 unidades com salmão, manga, cream cheese e molho tarê — sabor tropical.', img: 'https://media-cdn.tripadvisor.com/media/photo-s/15/13/61/93/uramaki-tropical.jpg', badge: 'new', tags: ['new'], meta: ['Salmão', 'Manga', 'Tarê'] },
+                    { id: 'u5', name: 'Uramaki Kani', jp: 'カニ', price: 36, desc: '8 unidades com kani kama, cream cheese, pepino e gergelim — clássico favorito.', img: 'https://alloydeliveryimages.s3.sa-east-1.amazonaws.com/item_images/7172/66e365a00f9c8rg2aj.webp', tags: [], meta: ['Kani', 'Cream Cheese'] },
+                    { id: 'u6', name: 'Uramaki Spicy Salmon', jp: 'スパイシー', price: 40, desc: '8 unidades com salmão e maionese picante, cobertos com cebolinha e togarashi.', img: 'https://static-images.ifood.com.br/image/upload/t_high/pratos/57ad5084-a39e-4140-99eb-25f53c122e12/202309170830_83C8_i.jpg', badge: 'spicy', tags: ['spicy'], meta: ['Salmão', 'Spicy', 'Togarashi'] },
                 ]
             },
+            // ── NIGIRI ────────────────────────────────────────────
             {
-                id: 'tempura', name: 'Tempura', jp: '天ぷら', ico: '🍤', items: [
-                    { id: 't1', name: 'Tempura Misto', jp: '天ぷら盛り合わせ', price: 54, desc: 'Camarão, abobrinha, batata-doce, cogumelo em massa leve e crocante.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Camarão', 'Legumes'] },
-                    { id: 't2', name: 'Tempura Ebi', jp: 'えび天ぷら', price: 58, desc: 'Quatro camarões tigre em tempura com molho tentsuyu e daikon.', img: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400&q=70', tags: [], meta: ['Camarão'] },
-                    { id: 't3', name: 'Yasai Tempura', jp: '野菜天ぷら', price: 42, desc: 'Legumes sazonais orgânicos em tempura leve — totalmente vegetariano.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', tags: ['veg'], meta: ['Vegano', 'Orgânico'] },
-                    { id: 't4', name: 'Tenzaru Soba', jp: '天ざるそば', price: 56, desc: 'Macarrão soba gelado com tempura de camarão e caldo frio de dashi.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Soba', 'Camarão'] },
+                id: 'nigiri', name: 'Nigiri', jp: '握り寿司', ico: '🍣', items: [
+                    { id: 'n1', name: 'Nigiri Salmão', jp: 'サーモン握り', price: 18, desc: '2 unidades de bolinho de arroz temperado coberto com salmão fresco e wasabi da casa.', img: 'https://garden.chefware.com.br/44/0/0/niguiri-salmao-4-unidades.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Wasabi'] },
+                    { id: 'n2', name: 'Nigiri Atum', jp: 'マグロ握り', price: 20, desc: '2 unidades com atum rubro fresco, levemente temperado com shoyu e gengibre.', img: 'https://deusimarsushi.shopweb.app.br/_core/_uploads/249/2024/08/21460908245aebhc1cfi.jpg', tags: [], meta: ['Atum', 'Shoyu'] },
+                    { id: 'n3', name: 'Nigiri Camarão', jp: 'エビ握り', price: 19, desc: '2 unidades com camarão cozido e aberto sobre bolinho de arroz com wasabi.', img: 'https://cloudfront-us-east-1.images.arcpublishing.com/estadao/KRJNFQQYD5ERJFFUBOXVQRT4NE.jpg', tags: [], meta: ['Camarão', 'Wasabi'] },
+                    { id: 'n4', name: 'Nigiri Kani', jp: 'カニ握り', price: 16, desc: '2 unidades com kani kama sobre arroz temperado, finalizado com maionese japonesa.', img: 'https://cardapio.octosushi.com.br/wp-content/uploads/2023/11/IMG_4861-Editar-768x768.jpg', tags: [], meta: ['Kani', 'Maionese'] },
+                    { id: 'n5', name: 'Nigiri Skin', jp: 'スキン握り', price: 18, desc: '2 unidades com pele de salmão grelhada e crocante sobre arroz com molho tarê.', img: 'https://tsusanmussurunga.meucatalogofacil.com/_core/_uploads//2023/04/0256270423j1bjcffbah.jpg', badge: 'new', tags: ['new'], meta: ['Pele Salmão', 'Tarê'] },
                 ]
             },
+            // ── SASHIMI ───────────────────────────────────────────
             {
-                id: 'grelhados', name: 'Grelhados', jp: '焼き物', ico: '🥩', items: [
-                    { id: 'g1', name: 'Wagyu A5 Donburi', jp: '和牛丼', price: 145, desc: 'Wagyu grau A5 fatiado sobre arroz japonês com cebola caramelizada e gema.', img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Wagyu A5', 'Trufa'] },
-                    { id: 'g2', name: 'Yakitori Egima', jp: '焼き鳥', price: 62, desc: 'Espetinhos de frango grelhados em carvão binchōtan.', img: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=70', tags: [], meta: ['Frango', 'Tare'] },
-                    { id: 'g3', name: 'Buri Shioyaki', jp: 'ぶり塩焼き', price: 68, desc: 'Filé grelhado com sal marinho, daikon e limão siciliano.', img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=70', tags: [], meta: ['Peixe', 'Daikon'] },
-                    { id: 'g4', name: 'Niku Maki Roll', jp: '肉巻きロール', price: 72, desc: 'Rolinho de carne com shimeji, aspargos e teriyaki da casa.', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=70', badge: 'spicy', tags: ['spicy'], meta: ['Carne', 'Teriyaki'] },
+                id: 'sashimi', name: 'Sashimi', jp: '刺身', ico: '🐟', items: [
+                    { id: 'sa1', name: 'Sashimi Salmão', jp: 'サーモン刺身', price: 45, desc: '8 fatias de salmão fresco premium, servido com daikon, wasabi e shoyu da casa.', img: 'https://www.sabornamesa.com.br/media/k2/items/cache/2db5f428e08ae0806a52ea9c99ed666e_XL.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Daikon', 'Wasabi'] },
+                    { id: 'sa2', name: 'Sashimi Atum', jp: 'マグロ刺身', price: 52, desc: '8 fatias de atum rubro selecionado, com gengibre em conserva e shoyu especial.', img: 'https://anamariareceitas.com.br/wp-content/uploads/2024/06/5473-768x512.jpg', tags: [], meta: ['Atum', 'Gengibre'] },
+                    { id: 'sa3', name: 'Sashimi Misto', jp: '盛り合わせ刺身', price: 68, desc: '12 fatias variadas — salmão, atum e kani — apresentação caprichada com flores de daikon.', img: 'https://media-cdn.tripadvisor.com/media/photo-s/04/b2/33/0e/sushi-hokkai.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Atum', 'Kani'] },
+                    { id: 'sa4', name: 'Sashimi Camarão', jp: 'エビ刺身', price: 48, desc: '8 camarões cozidos e fatiados, servidos gelados com wasabi e ponzu cítrico.', img: 'https://img.freepik.com/fotos-premium/sashimi-de-camarao-com-limao-e-gelo-em-uma-folha-de-bambu_210632-7262.jpg', tags: [], meta: ['Camarão', 'Ponzu'] },
                 ]
             },
+            // ── JOY / TEMAKI ──────────────────────────────────────
             {
-                id: 'entradas', name: 'Entradas', jp: '前菜', ico: '🥟', items: [
-                    { id: 'e1', name: 'Gyoza ao Vapor', jp: '餃子蒸し', price: 34, desc: 'Dumplings de frango e gengibre no vapor com ponzu de yuzu.', img: 'https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Frango', 'Yuzu'] },
-                    { id: 'e2', name: 'Edamame Trufa', jp: '枝豆トリュフ', price: 28, desc: 'Edamame no vapor com manteiga de trufa branca e sal defumado.', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=70', tags: ['veg'], meta: ['Vegano', 'Trufa'] },
-                    { id: 'e3', name: 'Chawanmushi', jp: '茶碗蒸し', price: 36, desc: 'Pudim de ovo salgado a vapor com camarão e cogumelo.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', tags: [], meta: ['Ovo', 'Camarão'] },
-                    { id: 'e4', name: 'Agedashi Tofu', jp: '揚げ出し豆腐', price: 32, desc: 'Tofu frito em panko, caldo tentsuyu quente e katsuobushi.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', tags: ['veg'], meta: ['Tofu'] },
-                    { id: 'e5', name: 'Karaage Negi', jp: '唐揚げ', price: 38, desc: 'Frango crocante marinado em shoyu e gengibre, maionese de yuzu.', img: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Frango', 'Yuzu'] },
+                id: 'joy', name: 'Joy & Temaki', jp: 'ジョイ・手巻き', ico: '🌮', items: [
+                    { id: 'j1', name: 'Joy de Salmão', jp: 'サーモンジョイ', price: 28, desc: 'Cone de massa de gyoza frito recheado com salmão, cream cheese e cebolinha.', img: 'https://alloydeliveryimages.s3.sa-east-1.amazonaws.com/item_images/3694/6441d1b14db59dqqbz.webp', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Cream Cheese', 'Frito'] },
+                    { id: 'j2', name: 'Joy de Camarão', jp: 'エビジョイ', price: 30, desc: 'Cone crocante com camarão empanado, cream cheese e molho especial.', img: 'https://imagens.jotaja.com/produtos/13f391a8-ba1f-41d2-8f77-219d114b65b3.jpg', badge: 'new', tags: ['new'], meta: ['Camarão', 'Cream Cheese'] },
+                    { id: 'j3', name: 'Temaki Salmão', jp: 'サーモン手巻き', price: 24, desc: 'Cone de alga nori com arroz, salmão fresco, cream cheese e cebolinha.', img: 'https://www.seara.com.br/wp-content/uploads/2025/09/R0625-SP-temaki-tradicional-1200x675-1.webp', tags: [], meta: ['Salmão', 'Nori', 'Cream Cheese'] },
+                    { id: 'j4', name: 'Temaki Atum', jp: 'マグロ手巻き', price: 26, desc: 'Cone de alga com atum fresco, arroz temperado e pepino crocante.', img: 'https://djapa.com.br/wp-content/uploads/2022/02/temaki.jpg', tags: [], meta: ['Atum', 'Pepino'] },
+                    { id: 'j5', name: 'Temaki Kani', jp: 'カニ手巻き', price: 22, desc: 'Cone de alga com kani kama, cream cheese, pepino e gergelim. O queridinhos do Brasil.', img: 'https://media-cdn.tripadvisor.com/media/photo-s/12/1d/3a/00/temaki-kani-natural.jpg', tags: [], meta: ['Kani', 'Cream Cheese'] },
                 ]
             },
+            // ── COMBOS ────────────────────────────────────────────
             {
-                id: 'sobremesas', name: 'Sobremesas', jp: 'デザート', ico: '🍡', items: [
-                    { id: 'd1', name: 'Mochi Artesanal', jp: '大福餅', price: 26, desc: 'Bolinho de arroz com pasta de feijão e sorvete de matchá.', img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&q=70', badge: 'chef', tags: ['chef', 'veg'], meta: ['Matchá', 'Azuki'] },
-                    { id: 'd2', name: 'Taiyaki Creme', jp: '鯛焼き', price: 22, desc: 'Biscoito em forma de peixe com creme de baunilha e pasta de azuki.', img: 'https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=400&q=70', tags: ['veg'], meta: ['Creme', 'Azuki'] },
-                    { id: 'd3', name: 'Parfait Matcha', jp: '抹茶パフェ', price: 34, desc: 'Sorvete de matchá, anmitsu, geleia de kanten e chantilly.', img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&q=70', badge: 'new', tags: ['new', 'veg'], meta: ['Matchá'] },
-                    { id: 'd4', name: 'Kakigori Premium', jp: 'かき氷', price: 30, desc: 'Raspado com calda de ume, creme de condensado e frutas vermelhas.', img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&q=70', tags: ['veg'], meta: ['Ume', 'Frutas'] },
+                id: 'combos', name: 'Combos', jp: 'コンボ', ico: '🎁', items: [
+                    { id: 'c1', name: 'Combo 50 Peças — Salmão', jp: 'サーモン50個', price: 89, desc: '50 peças variadas com salmão: 16 hot roll, 16 uramaki philadelphia, 10 nigiri salmão e 8 sashimi salmão.', img: 'https://garden.chefware.com.br/3/0/0/combo-especial-salmao-hossomaki-por-uramaki.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', '50 Peças', 'Variado'] },
+                    { id: 'c2', name: 'Combo 50 Peças — Misto', jp: 'ミックス50個', price: 95, desc: '50 peças da casa: mix de hot roll, uramaki, nigiri e sashimi com salmão, atum e camarão.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjUKVDAnSj0zlCJQH1opMl6zwMY5IgYrijqA&s', badge: 'chef', tags: ['chef'], meta: ['Misto', '50 Peças', 'Salmão', 'Atum', 'Camarão'] },
+                    { id: 'c3', name: 'Combo 50 Peças — Vegano', jp: 'ベジタリアン50個', price: 78, desc: '50 peças sem peixe: uramaki de pepino e cenoura, hot roll de kani vegano e temaki de tofu.', img: 'https://rapidito.com.br/uploads/8/1619011610.jpg', tags: ['veg'], meta: ['Vegano', '50 Peças', 'Sem Peixe'] },
+                    { id: 'c4', name: 'Combo 50 Peças — Premium', jp: 'プレミアム50個', price: 129, desc: '50 peças premium: sashimi misto, nigiri salmão e atum, uramaki tropical e hot roll skin.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSW3ptFLJyM03dTFWfUn26sXAaQkR5jXuh-nA&s', badge: 'new', tags: ['new'], meta: ['Premium', '50 Peças', 'Sashimi'] },
+                    { id: 'c5', name: 'Combo 100 Peças — Família', jp: 'ファミリー100個', price: 175, desc: '100 peças para dividir! Tudo do cardápio: hot roll, uramaki, nigiri, sashimi e temaki variados.', img: 'https://alloydeliveryimages.s3.sa-east-1.amazonaws.com/item_images/7172/663d25a7a58a2xblx7.webp', badge: 'chef', tags: ['chef'], meta: ['100 Peças', 'Família', 'Completo'] },
                 ]
             },
+            // ── BEBIDAS ───────────────────────────────────────────
             {
-                id: 'bebidas', name: 'Bebidas', jp: '飲み物', ico: '🍶', items: [
-                    { id: 'b1', name: 'Sakê Premium', jp: 'プレミアム日本酒', price: 55, desc: 'Junmai Daiginjo — notas florais e frutadas, gelado ou quente.', img: 'https://de.japan-gourmet.com/media/c8/c1/89/1746006881/Ueno-Sake-Shop.webp?ts=1746007001', badge: 'chef', tags: ['chef'], meta: ['Junmai', 'Daiginjo'] },
-                    { id: 'b2', name: 'Matcha Latte', jp: '抹茶ラテ', price: 18, desc: 'Matchá Uji A-grade com leite de aveia cremoso.', img: 'https://www.the-matcha.tokyo/cdn/shop/articles/matchalatte_004_1445x.jpg?v=1613919616', tags: ['veg'], meta: ['Matchá', 'Aveia'] },
-                    { id: 'b3', name: 'Ramune Original', jp: 'ラムネ', price: 14, desc: 'Refrigerante japonês Ramune com bolinha de gude na garrafa.', img: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&q=70', tags: [], meta: ['Japão'] },
-                    { id: 'b4', name: 'Yuzu Sour', jp: 'ゆずサワー', price: 36, desc: 'Shochu, suco de yuzu fresco, água com gás e toque de wasabi.', img: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Yuzu', 'Shochu'] },
-                    { id: 'b5', name: 'Hojicha Gelado', jp: 'ほうじ茶', price: 16, desc: 'Chá verde tostado em infusão a frio, levemente caramelado.', img: 'https://static.vecteezy.com/ti/fotos-gratis/p2/22664675-gelado-verde-japones-hojicha-cha-dentro-copos-e-folhas-dentro-uma-tigela-em-a-mesa-foto.jpg', tags: ['veg'], meta: ['Chá'] },
-                    { id: 'b6', name: 'Umeshu Cocktail', jp: '梅酒カクテル', price: 32, desc: 'Licor de ameixa japonesa com soda e fatias frescas de ume.', img: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&q=70', tags: [], meta: ['Ume', 'Shochu'] },
+                id: 'bebidas', name: 'Bebidas', jp: '飲み物', ico: '🥤', items: [
+                    { id: 'b1', name: 'Coca-Cola Lata 350ml', jp: 'コカコーラ', price: 7, desc: 'Coca-Cola gelada em lata 350ml. A clássica que combina com tudo.', img: 'https://cdn.awsli.com.br/600x1000/1957/1957771/produto/104769747/refrigerante-coca-cola-lata-350ml-santa-cruz-doces2-i9d9ig27v5.png', tags: [], meta: ['350ml', 'Gelada', 'Lata'] },
+                    { id: 'b2', name: 'Fanta Laranja Lata 350ml', jp: 'ファンタオレンジ', price: 7, desc: 'Fanta Laranja gelada em lata 350ml. Refrescante e saborosa.', img: 'https://a-static.mlcdn.com.br/420x420/refrigerante-lata-fanta-laranja-350ml/garagem94/20114c5c87c711ee96c74201ac185040/30362b4b0ef78feb48cc739d7cdecde2.jpeg', tags: [], meta: ['350ml', 'Gelada', 'Lata'] },
+                    { id: 'b3', name: 'Fanta Uva Lata 350ml', jp: 'ファンタグレープ', price: 7, desc: 'Fanta Uva gelada em lata 350ml. Sabor inconfundível.', img: 'https://mambodelivery.vtexassets.com/arquivos/ids/235865/refrigerante-de-uva-fanta-lata-350ml.jpg?v=638911206150230000', badge: 'new', tags: ['new'], meta: ['350ml', 'Gelada', 'Lata'] },
+                    { id: 'b4', name: 'Água com Gás 500ml', jp: '炭酸水', price: 6, desc: 'Água mineral com gás garrafa 500ml. Leve e refrescante.', img: 'https://fontagua.com.br/wp-content/uploads/2019/02/splash_510ml-gas-1.jpg', tags: ['veg'], meta: ['500ml', 'Garrafa', 'Com Gás'] },
+                    { id: 'b5', name: 'Água sem Gás 500ml', jp: 'ミネラルウォーター', price: 5, desc: 'Água mineral sem gás garrafa 500ml.', img: 'https://prezunic.vtexassets.com/arquivos/ids/180392-800-auto?v=638368812050070000&width=800&height=auto&aspect=true', tags: ['veg'], meta: ['500ml', 'Garrafa', 'Sem Gás'] },
+                    { id: 'b6', name: 'Suco de Laranja Natural', jp: 'オレンジジュース', price: 12, desc: 'Suco de laranja espremido na hora, 400ml. Sem conservantes.', img: 'https://www.samsclub.com.br/blog/wp-content/uploads/2024/01/Vidro-do-suco-de-laranja-colocado-num-copo-sobre-madeira.jpg', tags: ['veg'], meta: ['400ml', 'Natural', 'Sem Conservante'] },
                 ]
             },
         ];
-
-
 
         // ════════════════════════════════
         // STATE
