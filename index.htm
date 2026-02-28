@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EGIMA — Sistema de Pedidos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@200;300;400;600;700;900&family=Cinzel:wght@400;600;700;900&family=Lora:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --black: #04040A;
+            --deep: #080810;
+            --ink: #0F0F1A;
+            --smoke: #161624;
+            --paper: #F4EEE4;
+            --cream: #EDE5D8;
+            --bone: #D8CFC0;
+            --red: #B83232;
+            --crimson: #7A1A1A;
+            --ember: #D4522A;
+            --gold: #C4973A;
+            --pale: #1A1A2A;
+            --green: #2E7D52;
+            --orange: #C4612A;
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            background: var(--black);
+            color: var(--paper);
+            font-family: 'Lora', serif;
+            overflow: hidden;
+            cursor: none;
+            height: 100vh
+        }
+
+        /* CURSOR */
+        #cur {
+            position: fixed;
+            width: 7px;
+            height: 7px;
+            background: var(--gold);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: width .2s, height .2s, background .2s
+        }
+
+        #cur-ring {
+            position: fixed;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(196, 151, 58, .3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99998;
+            transform: translate(-50%, -50%);
+            transition: left .1s ease-out, top .1s ease-out, width .3s, height .3s
+        }
+
+        /* CANVAS */
+        #bg-cv {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: .6
+        }
+
+        /* SCREENS */
+        .screen {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: none;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+        .screen.active {
+            display: flex
+        }
+
+        @keyframes sIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes sOut {
+            from {
+                opacity: 1
+            }
+
+            to {
+                opacity: 0
+            }
+        }
+
+        .screen.fade-in {
+            animation: sIn .7s cubic-bezier(.4, 0, .2, 1) forwards
+        }
+
+        /* ══════════════════════════════════════
+   SHARED NAV
+══════════════════════════════════════ */
+        .topbar {
+            height: 60px;
+            background: rgba(4, 4, 10, .96);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(196, 151, 58, .1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            flex-shrink: 0;
+            z-index: 100
+        }
+
+        .tb-brand {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            cursor: none;
+            background: none;
+            border: none;
+            color: var(--paper)
+        }
+
+        .tb-egima {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: .15em;
+            color: var(--gold);
+            text-shadow: 0 0 30px rgba(196, 151, 58, .25)
+        }
+
+        .tb-sub {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .5em;
+            text-transform: uppercase;
+            color: rgba(196, 151, 58, .4)
+        }
+
+        .tb-mesa {
+            font-family: 'Space Mono', monospace;
+            font-size: .5rem;
+            letter-spacing: .25em;
+            text-transform: uppercase;
+            color: rgba(180, 50, 50, .8);
+            border: 1px solid rgba(184, 50, 50, .25);
+            padding: .35rem 1rem
+        }
+
+        .tb-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem
+        }
+
+        .tb-btn {
+            font-family: 'Space Mono', monospace;
+            font-size: .44rem;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            padding: .55rem 1.3rem;
+            background: transparent;
+            border: 1px solid rgba(196, 151, 58, .2);
+            color: rgba(196, 151, 58, .6);
+            cursor: none;
+            transition: all .3s
+        }
+
+        .tb-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(196, 151, 58, .06)
+        }
+
+        .tb-btn.primary {
+            background: var(--red);
+            color: var(--paper);
+            border-color: var(--red)
+        }
+
+        .tb-btn.primary:hover {
+            background: var(--crimson)
+        }
+
+        .cart-wrap {
+            position: relative
+        }
+
+        .cart-dot {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            background: var(--red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-size: .5rem;
+            font-weight: 700;
+            display: none
+        }
+
+        .cart-dot.show {
+            display: flex
+        }
+
+        /* ══════════════════════════════════════
+   SCREEN 0 — INTRO / ROLE SELECT
+══════════════════════════════════════ */
+        #sc-intro {
+            background: var(--black);
+            align-items: center;
+            justify-content: center;
+            z-index: 20
+        }
+
+        .intro-bg {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(184, 50, 50, .04) 0%, transparent 70%)
+        }
+
+        .intro-lines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none
+        }
+
+        .iline {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            opacity: 0;
+            animation: ilineIn 1.5s ease forwards
+        }
+
+        .iline:nth-child(1) {
+            left: 20%;
+            background: linear-gradient(to bottom, transparent, rgba(196, 151, 58, .05), rgba(196, 151, 58, .1), rgba(196, 151, 58, .05), transparent);
+            animation-delay: .2s
+        }
+
+        .iline:nth-child(2) {
+            left: 80%;
+            background: linear-gradient(to bottom, transparent, rgba(196, 151, 58, .05), rgba(196, 151, 58, .1), rgba(196, 151, 58, .05), transparent);
+            animation-delay: .4s
+        }
+
+        .iline:nth-child(3) {
+            left: 50%;
+            background: linear-gradient(to bottom, transparent, rgba(184, 50, 50, .04), rgba(184, 50, 50, .07), rgba(184, 50, 50, .04), transparent);
+            animation-delay: .1s
+        }
+
+        @keyframes ilineIn {
+            from {
+                opacity: 0;
+                transform: scaleY(0)
+            }
+
+            to {
+                opacity: 1;
+                transform: scaleY(1)
+            }
+        }
+
+        .intro-inner {
+            position: relative;
+            text-align: center;
+            z-index: 5;
+            max-width: 600px;
+            padding: 2rem
+        }
+
+        .intro-jp {
+            font-family: 'Noto Serif JP', serif;
+            font-size: clamp(5rem, 15vw, 11rem);
+            font-weight: 200;
+            color: rgba(244, 238, 228, .06);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            pointer-events: none;
+            letter-spacing: .05em
+        }
+
+        .intro-logo {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            letter-spacing: .25em;
+            color: var(--paper);
+            opacity: 0;
+            animation: sIn .9s ease .3s forwards;
+            position: relative
+        }
+
+        .intro-logo em {
+            color: var(--gold);
+            font-style: normal
+        }
+
+        .intro-tagline {
+            font-family: 'Noto Serif JP', serif;
+            font-size: .8rem;
+            font-weight: 200;
+            letter-spacing: .3em;
+            color: rgba(196, 151, 58, .45);
+            opacity: 0;
+            animation: sIn .8s ease .7s forwards;
+            margin-top: .4rem;
+            display: block
+        }
+
+        .intro-divider {
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(196, 151, 58, .4), transparent);
+            margin: 2rem auto;
+            opacity: 0;
+            animation: sIn .8s ease .9s forwards
+        }
+
+        .intro-desc {
+            font-style: italic;
+            font-size: 1rem;
+            color: rgba(244, 238, 228, .4);
+            opacity: 0;
+            animation: sIn .8s ease 1s forwards;
+            margin-bottom: 2.5rem;
+            line-height: 1.9
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            opacity: 0;
+            animation: sIn .8s ease 1.2s forwards
+        }
+
+        .role-card {
+            background: rgba(15, 15, 26, .9);
+            border: 1px solid rgba(196, 151, 58, .1);
+            padding: 1.8rem 1.2rem;
+            cursor: none;
+            transition: all .4s;
+            text-align: center;
+            position: relative;
+            overflow: hidden
+        }
+
+        .role-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(196, 151, 58, .04), transparent);
+            opacity: 0;
+            transition: opacity .4s
+        }
+
+        .role-card:hover {
+            border-color: rgba(196, 151, 58, .3);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .5)
+        }
+
+        .role-card:hover::before {
+            opacity: 1
+        }
+
+        .role-icon {
+            font-size: 2.2rem;
+            display: block;
+            margin-bottom: 1rem
+        }
+
+        .role-title {
+            font-family: 'Cinzel', serif;
+            font-size: .85rem;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            color: var(--gold);
+            display: block;
+            margin-bottom: .5rem
+        }
+
+        .role-desc {
+            font-style: italic;
+            font-size: .82rem;
+            color: rgba(244, 238, 228, .35);
+            line-height: 1.7
+        }
+
+        .role-mesa-row {
+            margin-top: 2rem;
+            opacity: 0;
+            animation: sIn .8s ease 1.4s forwards
+        }
+
+        .role-mesa-row p {
+            font-family: 'Space Mono', monospace;
+            font-size: .42rem;
+            letter-spacing: .35em;
+            text-transform: uppercase;
+            color: rgba(196, 151, 58, .35);
+            margin-bottom: .7rem
+        }
+
+        .mesa-input-group {
+            display: flex;
+            justify-content: center;
+            gap: 0
+        }
+
+        .mesa-input-group input {
+            background: rgba(0, 0, 0, .5);
+            border: 1px solid rgba(196, 151, 58, .15);
+            border-right: none;
+            padding: .7rem 1.2rem;
+            font-family: 'Space Mono', monospace;
+            font-size: .75rem;
+            color: var(--paper);
+            outline: none;
+            width: 90px;
+            text-align: center;
+            letter-spacing: .2em;
+            cursor: none;
+            transition: border-color .3s
+        }
+
+        .mesa-input-group input:focus {
+            border-color: rgba(196, 151, 58, .4)
+        }
+
+        .mesa-input-group input::placeholder {
+            color: rgba(196, 151, 58, .2)
+        }
+
+        .mesa-input-group button {
+            background: rgba(196, 151, 58, .12);
+            border: 1px solid rgba(196, 151, 58, .15);
+            color: var(--gold);
+            font-family: 'Space Mono', monospace;
+            font-size: .44rem;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            padding: .7rem 1.2rem;
+            cursor: none;
+            transition: all .3s
+        }
+
+        .mesa-input-group button:hover {
+            background: var(--gold);
+            color: var(--ink)
+        }
+
+        /* ══════════════════════════════════════
+   SCREEN 1 — CLIENTE / CARDÁPIO
+══════════════════════════════════════ */
+        #sc-cliente {
+            background: var(--deep)
+        }
+
+        .menu-wrap {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            height: calc(100vh - 60px)
+        }
+
+        /* sidebar */
+        .msidebar {
+            width: 220px;
+            flex-shrink: 0;
+            background: rgba(8, 8, 16, .98);
+            border-right: 1px solid rgba(196, 151, 58, .07);
+            overflow-y: auto;
+            padding: 1.2rem 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(196, 151, 58, .15) transparent
+        }
+
+        .msidebar-lbl {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .45em;
+            text-transform: uppercase;
+            color: rgba(196, 151, 58, .25);
+            padding: 0 1.3rem;
+            margin-bottom: 1rem
+        }
+
+        .mcat {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            padding: .8rem 1.3rem;
+            background: transparent;
+            border: none;
+            border-left: 2px solid transparent;
+            width: 100%;
+            text-align: left;
+            cursor: none;
+            transition: all .3s;
+            color: rgba(244, 238, 228, .4)
+        }
+
+        .mcat:hover,
+        .mcat.on {
+            background: rgba(184, 50, 50, .06);
+            border-left-color: var(--red);
+            color: var(--paper)
+        }
+
+        .mcat.on .mcat-name {
+            color: var(--red)
+        }
+
+        .mcat-ico {
+            font-size: 1rem;
+            flex-shrink: 0
+        }
+
+        .mcat-name {
+            font-family: 'Noto Serif JP', serif;
+            font-size: .85rem;
+            display: block
+        }
+
+        .mcat-jp {
+            font-family: 'Noto Serif JP', serif;
+            font-size: .56rem;
+            color: rgba(196, 151, 58, .3);
+            display: block
+        }
+
+        .mcat-n {
+            font-family: 'Space Mono', monospace;
+            font-size: .37rem;
+            margin-left: auto;
+            padding: .18rem .4rem;
+            background: rgba(184, 50, 50, .1);
+            color: rgba(184, 50, 50, .6);
+            border-radius: 1px
+        }
+
+        /* scroll area */
+        .mscroll {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(184, 50, 50, .15) transparent
+        }
+
+        /* menu hero */
+        .mhero {
+            height: 220px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0
+        }
+
+        .mhero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(8, 8, 16, .95) 0%, rgba(120, 30, 30, .08) 50%, rgba(8, 8, 16, .95) 100%)
+        }
+
+        .mhero-jp {
+            position: absolute;
+            font-family: 'Noto Serif JP', serif;
+            font-size: 8rem;
+            font-weight: 200;
+            color: rgba(244, 238, 228, .04);
+            letter-spacing: .1em;
+            pointer-events: none
+        }
+
+        .mhero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center
+        }
+
+        .mhero-tag {
+            font-family: 'Space Mono', monospace;
+            font-size: .4rem;
+            letter-spacing: .4em;
+            text-transform: uppercase;
+            color: var(--gold);
+            border: 1px solid rgba(196, 151, 58, .2);
+            padding: .35rem 1rem;
+            display: inline-block;
+            margin-bottom: .9rem
+        }
+
+        .mhero-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            letter-spacing: .15em;
+            font-weight: 600
+        }
+
+        .mhero-title em {
+            color: var(--red);
+            font-style: normal
+        }
+
+        .mhero-sub {
+            font-style: italic;
+            color: rgba(244, 238, 228, .3);
+            font-size: .88rem;
+            margin-top: .5rem
+        }
+
+        /* search */
+        .msearch {
+            padding: 1.5rem 2rem 1.2rem;
+            border-bottom: 1px solid rgba(196, 151, 58, .06);
+            background: rgba(8, 8, 16, .7)
+        }
+
+        .msearch input {
+            width: 100%;
+            background: rgba(0, 0, 0, .45);
+            border: 1px solid rgba(184, 50, 50, .1);
+            padding: .75rem 1.2rem;
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: .9rem;
+            color: var(--paper);
+            outline: none;
+            cursor: none;
+            transition: border-color .3s
+        }
+
+        .msearch input:focus {
+            border-color: rgba(184, 50, 50, .3)
+        }
+
+        .msearch input::placeholder {
+            color: rgba(244, 238, 228, .18)
+        }
+
+        .filter-row {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+            margin-top: .8rem
+        }
+
+        .fpill {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            padding: .32rem .8rem;
+            border: 1px solid rgba(184, 50, 50, .12);
+            color: rgba(244, 238, 228, .35);
+            background: transparent;
+            cursor: none;
+            transition: all .3s
+        }
+
+        .fpill:hover,
+        .fpill.on {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(184, 50, 50, .07)
+        }
+
+        /* sections */
+        .msec {
+            padding: 2.5rem 2rem;
+            scroll-margin-top: 0
+        }
+
+        .msec-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(196, 151, 58, .07)
+        }
+
+        .msec-left {
+            display: flex;
+            align-items: center;
+            gap: .8rem
+        }
+
+        .msec-ico {
+            font-size: 1.5rem
+        }
+
+        .msec-name {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.5rem;
+            font-weight: 300
+        }
+
+        .msec-jp {
+            font-family: 'Noto Serif JP', serif;
+            font-size: .7rem;
+            color: rgba(196, 151, 58, .3);
+            margin-left: .4rem
+        }
+
+        .msec-count {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            padding: .28rem .7rem;
+            border: 1px solid rgba(184, 50, 50, .12);
+            color: rgba(184, 50, 50, .45)
+        }
+
+        /* grid */
+        .mgrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+            gap: 1rem
+        }
+
+        /* card */
+        .mcard {
+            background: rgba(15, 15, 26, .92);
+            border: 1px solid rgba(196, 151, 58, .08);
+            overflow: hidden;
+            cursor: none;
+            position: relative;
+            transition: transform .45s cubic-bezier(.25, .46, .45, .94), box-shadow .45s, border-color .45s
+        }
+
+        .mcard:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, .65), 0 0 30px rgba(196, 151, 58, .04);
+            border-color: rgba(196, 151, 58, .18)
+        }
+
+        .mcard-img {
+            height: 170px;
+            overflow: hidden;
+            position: relative
+        }
+
+        .mcard-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(.2) saturate(.75) brightness(.58);
+            transition: transform .6s ease, filter .4s
+        }
+
+        .mcard:hover .mcard-img img {
+            transform: scale(1.09);
+            filter: sepia(.06) saturate(.95) brightness(.7)
+        }
+
+        .mcard-fade {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(15, 15, 26, 1) 0%, rgba(15, 15, 26, .3) 50%, transparent 75%)
+        }
+
+        .mcard-shimmer {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .035) 50%, transparent 65%);
+            transform: translateX(-100%);
+            transition: transform .7s
+        }
+
+        .mcard:hover .mcard-shimmer {
+            transform: translateX(100%)
+        }
+
+        .mcard-badge {
+            position: absolute;
+            top: .7rem;
+            right: .7rem;
+            font-family: 'Space Mono', monospace;
+            font-size: .34rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            padding: .24rem .6rem;
+            z-index: 3
+        }
+
+        .badge-c {
+            background: var(--gold);
+            color: var(--black)
+        }
+
+        .badge-n {
+            background: var(--red);
+            color: var(--paper)
+        }
+
+        .badge-s {
+            background: var(--ember);
+            color: var(--paper)
+        }
+
+        .mcard-body {
+            padding: 1.1rem 1.3rem 1.3rem
+        }
+
+        .mcard-cat {
+            font-family: 'Space Mono', monospace;
+            font-size: .36rem;
+            letter-spacing: .28em;
+            text-transform: uppercase;
+            color: rgba(184, 50, 50, .6);
+            display: block;
+            margin-bottom: .25rem
+        }
+
+        .mcard-name {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.05rem;
+            font-weight: 400;
+            line-height: 1.2;
+            margin-bottom: .12rem
+        }
+
+        .mcard-jp {
+            font-family: 'Noto Serif JP', serif;
+            font-size: .6rem;
+            color: rgba(196, 151, 58, .3);
+            display: block;
+            margin-bottom: .55rem
+        }
+
+        .mcard-desc {
+            font-style: italic;
+            font-size: .8rem;
+            color: rgba(244, 238, 228, .35);
+            line-height: 1.75;
+            margin-bottom: .9rem
+        }
+
+        .mcard-tags {
+            display: flex;
+            gap: .4rem;
+            flex-wrap: wrap;
+            margin-bottom: .9rem
+        }
+
+        .mtag {
+            font-family: 'Space Mono', monospace;
+            font-size: .33rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            padding: .18rem .45rem;
+            border: 1px solid rgba(244, 238, 228, .07);
+            color: rgba(244, 238, 228, .25)
+        }
+
+        .mcard-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .mcard-price {
+            font-family: 'Space Mono', monospace;
+            font-size: .75rem;
+            color: var(--gold);
+            letter-spacing: .08em
+        }
+
+        .mcard-price small {
+            font-size: .4rem;
+            color: rgba(196, 151, 58, .45);
+            margin-right: .15rem
+        }
+
+        .add-zone {
+            display: flex;
+            align-items: center;
+            gap: .5rem
+        }
+
+        .qctrl {
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            opacity: 0;
+            max-width: 0;
+            overflow: hidden;
+            transition: all .32s;
+            white-space: nowrap
+        }
+
+        .qctrl.vis {
+            opacity: 1;
+            max-width: 100px
+        }
+
+        .qb {
+            background: rgba(184, 50, 50, .1);
+            border: 1px solid rgba(184, 50, 50, .18);
+            color: var(--paper);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: none;
+            font-size: .85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .3s;
+            flex-shrink: 0
+        }
+
+        .qb:hover {
+            background: var(--red);
+            border-color: var(--red)
+        }
+
+        .qn {
+            font-family: 'Space Mono', monospace;
+            font-size: .6rem;
+            color: var(--gold);
+            min-width: 16px;
+            text-align: center
+        }
+
+        .addbtn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid rgba(184, 50, 50, .25);
+            color: var(--red);
+            cursor: none;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .32s;
+            flex-shrink: 0
+        }
+
+        .addbtn:hover,
+        .addbtn.in {
+            background: var(--red);
+            border-color: var(--red);
+            color: var(--paper);
+            transform: rotate(90deg)
+        }
+
+        .addbtn.in {
+            transform: none
+        }
+
+        .mcard-note {
+            display: none;
+            border-top: 1px solid rgba(196, 151, 58, .06)
+        }
+
+        .mcard-note.show {
+            display: block
+        }
+
+        .mcard-note textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, .35);
+            border: none;
+            padding: .55rem 1.3rem;
+            font-family: 'Lora', serif;
+            font-size: .8rem;
+            font-style: italic;
+            color: rgba(244, 238, 228, .48);
+            outline: none;
+            cursor: none;
+            resize: none
+        }
+
+        .mcard-note textarea::placeholder {
+            color: rgba(244, 238, 228, .2)
+        }
+
+        .msec-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(184, 50, 50, .12), transparent);
+            margin: 0 2rem
+        }
+
+        /* ══════════════════════════════════════
+   CART PANEL
+══════════════════════════════════════ */
+        #cart-panel {
+            position: fixed;
+            right: -460px;
+            top: 0;
+            width: 460px;
+            height: 100vh;
+            background: rgba(4, 4, 10, .99);
+            backdrop-filter: blur(40px);
+            border-left: 1px solid rgba(196, 151, 58, .12);
+            z-index: 600;
+            display: flex;
+            flex-direction: column;
+            transition: right .5s cubic-bezier(.77, 0, .175, 1)
+        }
+
+        #cart-panel.open {
+            right: 0
+        }
+
+        .cp-hd {
+            padding: 1.6rem 1.8rem;
+            border-bottom: 1px solid rgba(196, 151, 58, .08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0
+        }
+
+        .cp-ht {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            color: var(--gold)
+        }
+
+        .cp-hs {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .3em;
+            text-transform: uppercase;
+            color: rgba(184, 50, 50, .6);
+            display: block;
+            margin-top: .3rem
+        }
+
+        .cp-hclose {
+            background: transparent;
+            border: 1px solid rgba(196, 151, 58, .2);
+            color: var(--paper);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: none;
+            font-size: .95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .3s
+        }
+
+        .cp-hclose:hover {
+            background: var(--red);
+            border-color: var(--red)
+        }
+
+        .cp-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.2rem 1.6rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(196, 151, 58, .15) transparent
+        }
+
+        .cp-empty {
+            text-align: center;
+            padding: 3.5rem 1rem;
+            font-style: italic;
+            color: rgba(244, 238, 228, .2);
+            font-size: 1rem
+        }
+
+        .cp-empty span {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1.2rem
+        }
+
+        .cp-item {
+            display: flex;
+            gap: .8rem;
+            padding: .9rem 0;
+            border-bottom: 1px solid rgba(196, 151, 58, .06);
+            align-items: flex-start
+        }
+
+        .cp-iimg {
+            width: 52px;
+            height: 52px;
+            object-fit: cover;
+            flex-shrink: 0;
+            filter: sepia(.15) brightness(.6);
+            border: 1px solid rgba(196, 151, 58, .1)
+        }
+
+        .cp-iinfo {
+            flex: 1;
+            min-width: 0
+        }
+
+        .cp-iname {
+            font-family: 'Noto Serif JP', serif;
+            font-size: .9rem;
+            margin-bottom: .18rem
+        }
+
+        .cp-inote {
+            font-style: italic;
+            font-size: .74rem;
+            color: rgba(244, 238, 228, .3);
+            margin-bottom: .35rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .cp-ictrl {
+            display: flex;
+            align-items: center;
+            gap: .45rem
+        }
+
+        .cpqb {
+            background: rgba(184, 50, 50, .1);
+            border: 1px solid rgba(184, 50, 50, .16);
+            color: var(--paper);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: none;
+            font-size: .78rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .3s
+        }
+
+        .cpqb:hover {
+            background: var(--red)
+        }
+
+        .cpqn {
+            font-family: 'Space Mono', monospace;
+            font-size: .58rem;
+            color: var(--gold);
+            min-width: 16px;
+            text-align: center
+        }
+
+        .cp-ipr {
+            font-family: 'Space Mono', monospace;
+            font-size: .66rem;
+            color: var(--gold);
+            margin-left: auto;
+            flex-shrink: 0
+        }
+
+        .cp-irm {
+            background: transparent;
+            border: none;
+            color: rgba(184, 50, 50, .3);
+            cursor: none;
+            font-size: .85rem;
+            padding: .2rem;
+            transition: color .3s;
+            margin-left: .1rem
+        }
+
+        .cp-irm:hover {
+            color: var(--red)
+        }
+
+        /* mesa in cart */
+        .cp-mesa-blk {
+            padding: .9rem 1.4rem;
+            border-top: 1px solid rgba(196, 151, 58, .07);
+            border-bottom: 1px solid rgba(196, 151, 58, .07);
+            background: rgba(0, 0, 0, .3)
+        }
+
+        .cp-ml {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .3em;
+            text-transform: uppercase;
+            color: var(--red);
+            display: block;
+            margin-bottom: .4rem
+        }
+
+        .cp-mi {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(184, 50, 50, .15);
+            padding: .55rem .9rem;
+            font-family: 'Space Mono', monospace;
+            font-size: .7rem;
+            color: var(--paper);
+            outline: none;
+            cursor: none;
+            letter-spacing: .12em;
+            transition: border-color .3s
+        }
+
+        .cp-mi:focus {
+            border-color: rgba(196, 151, 58, .35)
+        }
+
+        /* obs global */
+        .cp-obs-blk {
+            padding: .9rem 1.4rem;
+            border-bottom: 1px solid rgba(196, 151, 58, .07);
+            background: rgba(0, 0, 0, .2)
+        }
+
+        .cp-obs-lbl {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .3em;
+            text-transform: uppercase;
+            color: rgba(196, 151, 58, .4);
+            display: block;
+            margin-bottom: .4rem
+        }
+
+        .cp-obs-ta {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(196, 151, 58, .1);
+            padding: .55rem .9rem;
+            font-family: 'Lora', serif;
+            font-size: .82rem;
+            font-style: italic;
+            color: rgba(244, 238, 228, .45);
+            outline: none;
+            cursor: none;
+            resize: none;
+            transition: border-color .3s;
+            line-height: 1.5
+        }
+
+        .cp-obs-ta:focus {
+            border-color: rgba(196, 151, 58, .3)
+        }
+
+        .cp-obs-ta::placeholder {
+            color: rgba(244, 238, 228, .18)
+        }
+
+        /* footer */
+        .cp-foot {
+            padding: 1.2rem 1.6rem;
+            border-top: 1px solid rgba(196, 151, 58, .1);
+            flex-shrink: 0
+        }
+
+        .cp-sub {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: .5rem
+        }
+
+        .cp-sl {
+            font-family: 'Space Mono', monospace;
+            font-size: .4rem;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            color: rgba(244, 238, 228, .35)
+        }
+
+        .cp-sv {
+            font-family: 'Space Mono', monospace;
+            font-size: .65rem;
+            color: rgba(244, 238, 228, .6)
+        }
+
+        .cp-tot {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1.2rem;
+            padding-top: .5rem;
+            border-top: 1px solid rgba(196, 151, 58, .08)
+        }
+
+        .cp-tl {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: .08em
+        }
+
+        .cp-tv {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gold)
+        }
+
+        .send-btn {
+            width: 100%;
+            background: var(--red);
+            color: var(--paper);
+            border: none;
+            padding: 1.1rem;
+            font-family: 'Space Mono', monospace;
+            font-size: .52rem;
+            letter-spacing: .32em;
+            text-transform: uppercase;
+            cursor: none;
+            overflow: hidden;
+            position: relative;
+            transition: background .3s
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--crimson)
+        }
+
+        .send-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 38%, rgba(255, 255, 255, .1) 50%, transparent 62%);
+            transform: translateX(-100%);
+            transition: transform .6s
+        }
+
+        .send-btn:hover::after {
+            transform: translateX(100%)
+        }
+
+        .send-btn:disabled {
+            background: rgba(184, 50, 50, .18);
+            color: rgba(244, 238, 228, .28);
+            cursor: not-allowed
+        }
+
+        /* ══════════════════════════════════════
+   SCREEN 2 — GARÇOM PANEL
+══════════════════════════════════════ */
+        #sc-garcom {
+            background: var(--deep)
+        }
+
+        .gp-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(196, 151, 58, .15) transparent
+        }
+
+        .gp-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem
+        }
+
+        .gstat {
+            background: rgba(15, 15, 26, .9);
+            border: 1px solid rgba(196, 151, 58, .08);
+            padding: 1.2rem 1.5rem
+        }
+
+        .gstat-val {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold);
+            line-height: 1
+        }
+
+        .gstat-lbl {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .3em;
+            text-transform: uppercase;
+            color: rgba(244, 238, 228, .3);
+            margin-top: .4rem
+        }
+
+        .gstat-lbl em {
+            color: var(--red);
+            font-style: normal
+        }
+
+        .gp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.2rem
+        }
+
+        .gp-empty {
+            text-align: center;
+            padding: 5rem 2rem;
+            font-style: italic;
+            color: rgba(244, 238, 228, .2);
+            grid-column: 1/-1
+        }
+
+        .gp-empty span {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 1.5rem
+        }
+
+        /* order card garçom */
+        .ocard {
+            background: rgba(15, 15, 26, .95);
+            border: 1px solid rgba(196, 151, 58, .1);
+            overflow: hidden;
+            animation: sIn .4s ease forwards;
+            position: relative
+        }
+
+        .ocard-bar {
+            height: 3px;
+            width: 100%
+        }
+
+        .ocard-bar.pending {
+            background: rgba(196, 151, 58, .5)
+        }
+
+        .ocard-bar.confirmed {
+            background: var(--red);
+            animation: barPulse 2s ease-in-out infinite
+        }
+
+        .ocard-bar.ready {
+            background: var(--green)
+        }
+
+        @keyframes barPulse {
+
+            0%,
+            100% {
+                opacity: .5
+            }
+
+            50% {
+                opacity: 1
+            }
+        }
+
+        .ocard-hd {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .9rem 1.2rem;
+            border-bottom: 1px solid rgba(196, 151, 58, .07)
+        }
+
+        .ocard-mesa {
+            font-family: 'Cinzel', serif;
+            font-size: .9rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            color: var(--gold)
+        }
+
+        .ocard-id {
+            font-family: 'Space Mono', monospace;
+            font-size: .4rem;
+            color: rgba(244, 238, 228, .3);
+            letter-spacing: .15em
+        }
+
+        .ocard-time {
+            font-family: 'Space Mono', monospace;
+            font-size: .42rem;
+            color: rgba(244, 238, 228, .35);
+            letter-spacing: .1em
+        }
+
+        .ocard-status {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            padding: .25rem .65rem;
+            border: 1px solid;
+            border-radius: 1px
+        }
+
+        .status-pending {
+            color: rgba(196, 151, 58, .7);
+            border-color: rgba(196, 151, 58, .2)
+        }
+
+        .status-confirmed {
+            color: rgba(184, 50, 50, .9);
+            border-color: rgba(184, 50, 50, .3)
+        }
+
+        .status-cooking {
+            color: rgba(212, 82, 42, .9);
+            border-color: rgba(212, 82, 42, .3)
+        }
+
+        .status-ready {
+            color: #4CAF50;
+            border-color: rgba(76, 175, 80, .3)
+        }
+
+        .status-delivered {
+            color: rgba(244, 238, 228, .3);
+            border-color: rgba(244, 238, 228, .1)
+        }
+
+        .ocard-items {
+            padding: .8rem 1.2rem;
+            min-height: 50px
+        }
+
+        .ocard-row {
+            display: flex;
+            align-items: baseline;
+            gap: .5rem;
+            padding: .25rem 0
+        }
+
+        .orow-qty {
+            font-family: 'Space Mono', monospace;
+            font-size: .62rem;
+            color: var(--red);
+            width: 18px;
+            flex-shrink: 0;
+            font-weight: 700
+        }
+
+        .orow-name {
+            font-family: 'Noto Serif JP', serif;
+            font-size: .85rem;
+            flex: 1
+        }
+
+        .orow-note {
+            font-style: italic;
+            font-size: .72rem;
+            color: rgba(244, 238, 228, .3);
+            width: 100%;
+            padding-left: 23px;
+            margin-top: -.18rem
+        }
+
+        .ocard-ft {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .8rem 1.2rem;
+            border-top: 1px solid rgba(196, 151, 58, .07)
+        }
+
+        .ocard-total {
+            font-family: 'Space Mono', monospace;
+            font-size: .7rem;
+            color: var(--gold)
+        }
+
+        .ocard-actions {
+            display: flex;
+            gap: .5rem
+        }
+
+        .oact {
+            font-family: 'Space Mono', monospace;
+            font-size: .37rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            padding: .5rem 1rem;
+            border: none;
+            cursor: none;
+            transition: all .3s
+        }
+
+        .oact-confirm {
+            background: rgba(196, 151, 58, .12);
+            color: var(--gold);
+            border: 1px solid rgba(196, 151, 58, .2)
+        }
+
+        .oact-confirm:hover {
+            background: var(--gold);
+            color: var(--black)
+        }
+
+        .oact-print {
+            background: rgba(184, 50, 50, .1);
+            color: var(--red);
+            border: 1px solid rgba(184, 50, 50, .2)
+        }
+
+        .oact-print:hover {
+            background: var(--red);
+            color: var(--paper)
+        }
+
+        .oact-deliver {
+            background: rgba(76, 175, 80, .1);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, .2)
+        }
+
+        .oact-deliver:hover {
+            background: #4CAF50;
+            color: var(--paper)
+        }
+
+        /* ══════════════════════════════════════
+   SCREEN 3 — COZINHA / KDS
+══════════════════════════════════════ */
+        #sc-cozinha {
+            background: var(--black)
+        }
+
+        .kds-topbar {
+            height: 60px;
+            background: rgba(4, 4, 10, .98);
+            border-bottom: 1px solid rgba(184, 50, 50, .15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            flex-shrink: 0
+        }
+
+        .kds-brand {
+            display: flex;
+            align-items: center;
+            gap: .8rem
+        }
+
+        .kds-egima {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: .2em;
+            color: var(--red)
+        }
+
+        .kds-label {
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .45em;
+            text-transform: uppercase;
+            color: rgba(184, 50, 50, .45)
+        }
+
+        .kds-live {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-family: 'Space Mono', monospace;
+            font-size: .42rem;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            color: rgba(244, 238, 228, .35)
+        }
+
+        .kds-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: liveDot 1.8s ease-in-out infinite
+        }
+
+        @keyframes liveDot {
+
+            0%,
+            100% {
+                opacity: .3
+            }
+
+            50% {
+                opacity: 1;
+                box-shadow: 0 0 8px #4CAF50
+            }
+        }
+
+        .kds-clock {
+            font-family: 'Space Mono', monospace;
+            font-size: .9rem;
+            color: var(--gold);
+            letter-spacing: .15em
+        }
+
+        .kds-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(184, 50, 50, .08);
+            flex-shrink: 0
+        }
+
+        .ktab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: .85rem;
+            font-family: 'Space Mono', monospace;
+            font-size: .4rem;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            color: rgba(244, 238, 228, .3);
+            cursor: none;
+            transition: all .3s
+        }
+
+        .ktab:hover {
+            color: rgba(244, 238, 228, .6)
+        }
+
+        .ktab.on {
+            color: var(--red);
+            border-bottom-color: var(--red)
+        }
+
+        .ktab-n {
+            margin-left: .4rem;
+            background: var(--red);
+            color: var(--paper);
+            padding: .08rem .38rem;
+            border-radius: 1px;
+            font-size: .45rem
+        }
+
+        .kds-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.8rem 2rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(184, 50, 50, .15) transparent
+        }
+
+        .kds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 1rem
+        }
+
+        .kds-empty {
+            text-align: center;
+            padding: 5rem 2rem;
+            font-style: italic;
+            color: rgba(244, 238, 228, .18);
+            grid-column: 1/-1
+        }
+
+        .kds-empty span {
+            font-size: 3.5rem;
+            display: block;
+            margin-bottom: 1.5rem
+        }
+
+        /* KDS ticket */
+        .ticket {
+            background: rgba(12, 12, 20, .97);
+            border: 1px solid rgba(184, 50, 50, .1);
+            overflow: hidden;
+            animation: sIn .4s cubic-bezier(.22, 1, .36, 1) forwards
+        }
+
+        .tbar {
+            height: 3px
+        }
+
+        .tbar.pending {
+            background: rgba(196, 151, 58, .45)
+        }
+
+        .tbar.cooking {
+            background: var(--ember);
+            animation: tbarPulse 1.5s ease-in-out infinite
+        }
+
+        .tbar.ready {
+            background: var(--green)
+        }
+
+        .tbar.delivered {
+            background: rgba(244, 238, 228, .1)
+        }
+
+        @keyframes tbarPulse {
+
+            0%,
+            100% {
+                opacity: .5
+            }
+
+            50% {
+                opacity: 1
+            }
+        }
+
+        .ticket-hd {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .8rem 1.1rem;
+            border-bottom: 1px solid rgba(196, 151, 58, .06)
+        }
+
+        .t-mesa {
+            font-family: 'Cinzel', serif;
+            font-size: .9rem;
+            font-weight: 700;
+            letter-spacing: .15em;
+            color: var(--gold)
+        }
+
+        .t-id {
+            font-family: 'Space Mono', monospace;
+            font-size: .37rem;
+            color: rgba(244, 238, 228, .3)
+        }
+
+        .t-timer {
+            font-family: 'Space Mono', monospace;
+            font-size: .62rem;
+            padding: .25rem .6rem;
+            border: 1px solid;
+            border-radius: 1px
+        }
+
+        .t-fresh {
+            color: var(--gold);
+            border-color: rgba(196, 151, 58, .28)
+        }
+
+        .t-warn {
+            color: var(--ember);
+            border-color: rgba(212, 82, 42, .35);
+            animation: twarn .8s ease-in-out infinite
+        }
+
+        .t-urgent {
+            color: #ff4444;
+            border-color: rgba(255, 68, 68, .4);
+            animation: twarn .35s ease-in-out infinite
+        }
+
+        @keyframes twarn {
+
+            0%,
+            100% {
+                opacity: .6
+            }
+
+            50% {
+                opacity: 1
+            }
+        }
+
+        .ticket-body {
+            padding: .7rem 1.1rem
+        }
+
+        .trow {
+            display: flex;
+            align-items: baseline;
+            gap: .5rem;
+            padding: .28rem 0;
+            border-bottom: 1px solid rgba(196, 151, 58, .04)
+        }
+
+        .trow:last-child {
+            border: none
+        }
+
+        .trow-q {
+            font-family: 'Space Mono', monospace;
+            font-size: .62rem;
+            color: var(--red);
+            width: 18px;
+            flex-shrink: 0;
+            font-weight: 700
+        }
+
+        .trow-n {
+            font-family: 'Noto Serif JP', serif;
+            font-size: .85rem;
+            flex: 1
+        }
+
+        .trow-obs {
+            font-style: italic;
+            font-size: .7rem;
+            color: rgba(244, 238, 228, .3);
+            width: 100%;
+            padding-left: 23px;
+            margin-top: -.15rem
+        }
+
+        .ticket-ft {
+            padding: .7rem 1.1rem;
+            border-top: 1px solid rgba(196, 151, 58, .07);
+            display: flex;
+            gap: .5rem
+        }
+
+        .tact {
+            flex: 1;
+            padding: .55rem;
+            font-family: 'Space Mono', monospace;
+            font-size: .38rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            border: none;
+            cursor: none;
+            transition: all .3s
+        }
+
+        .tact-start {
+            background: rgba(212, 82, 42, .12);
+            color: var(--ember);
+            border: 1px solid rgba(212, 82, 42, .22)
+        }
+
+        .tact-start:hover {
+            background: var(--ember);
+            color: var(--paper)
+        }
+
+        .tact-ready {
+            background: rgba(76, 175, 80, .1);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, .22)
+        }
+
+        .tact-ready:hover {
+            background: #4CAF50;
+            color: var(--paper)
+        }
+
+        .tact-deliver {
+            background: rgba(196, 151, 58, .08);
+            color: var(--gold);
+            border: 1px solid rgba(196, 151, 58, .18);
+            font-size: .35rem
+        }
+
+        .tact-deliver:hover {
+            background: var(--gold);
+            color: var(--black)
+        }
+
+        /* ══════════════════════════════════════
+   COMANDA PRINT MODAL
+══════════════════════════════════════ */
+        #print-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 800;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .85);
+            backdrop-filter: blur(8px)
+        }
+
+        #print-modal.show {
+            display: flex
+        }
+
+        .pm-inner {
+            background: var(--paper);
+            width: 340px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, .8)
+        }
+
+        .pm-actions {
+            display: flex;
+            gap: .8rem;
+            justify-content: center;
+            padding: 1.2rem;
+            background: rgba(4, 4, 10, .95);
+            border-top: 3px solid var(--paper)
+        }
+
+        .pm-act {
+            font-family: 'Space Mono', monospace;
+            font-size: .48rem;
+            letter-spacing: .25em;
+            text-transform: uppercase;
+            padding: .75rem 1.8rem;
+            border: none;
+            cursor: none;
+            transition: all .3s
+        }
+
+        .pm-print {
+            background: var(--red);
+            color: var(--paper)
+        }
+
+        .pm-print:hover {
+            background: var(--crimson)
+        }
+
+        .pm-close {
+            background: transparent;
+            color: rgba(244, 238, 228, .5);
+            border: 1px solid rgba(244, 238, 228, .15)
+        }
+
+        .pm-close:hover {
+            border-color: rgba(244, 238, 228, .4);
+            color: var(--paper)
+        }
+
+        /* THERMAL COMANDA */
+        #comanda {
+            font-family: 'Space Mono', monospace;
+            color: #111;
+            background: #fff;
+            padding: 16px;
+            font-size: 11px;
+            line-height: 1.4;
+            width: 100%
+        }
+
+        #comanda * {
+            font-family: 'Space Mono', monospace !important
+        }
+
+        .cmd-header {
+            text-align: center;
+            border-bottom: 2px dashed #222;
+            padding-bottom: 10px;
+            margin-bottom: 10px
+        }
+
+        .cmd-egima {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 3px
+        }
+
+        .cmd-sub {
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: #555;
+            margin-top: 2px
+        }
+
+        .cmd-info {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #aaa;
+            padding-bottom: 8px
+        }
+
+        .cmd-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin-bottom: 2px
+        }
+
+        .cmd-info-row span:first-child {
+            color: #555
+        }
+
+        .cmd-items {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #aaa;
+            padding-bottom: 8px
+        }
+
+        .cmd-item {
+            margin-bottom: 6px
+        }
+
+        .cmd-item-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700
+        }
+
+        .cmd-item-obs {
+            font-size: 9px;
+            color: #666;
+            padding-left: 8px;
+            margin-top: 1px
+        }
+
+        .cmd-item-obs::before {
+            content: '⚠ '
+        }
+
+        .cmd-total-block {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #aaa;
+            padding-bottom: 8px
+        }
+
+        .cmd-total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px
+        }
+
+        .cmd-total-row.final {
+            font-size: 13px;
+            font-weight: 700;
+            border-top: 1px solid #222;
+            padding-top: 4px;
+            margin-top: 4px
+        }
+
+        .cmd-footer {
+            text-align: center;
+            font-size: 9px;
+            color: #777;
+            letter-spacing: 1px
+        }
+
+        .cmd-qr {
+            text-align: center;
+            margin: 10px 0
+        }
+
+        .cmd-qr-box {
+            display: inline-block;
+            border: 2px solid #222;
+            padding: 8px;
+            font-size: 7px;
+            letter-spacing: 0;
+            line-height: 1.1
+        }
+
+        /* ══════════════════════════════════════
+   OVERLAY
+══════════════════════════════════════ */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .6);
+            z-index: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: all
+        }
+
+        /* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            z-index: 9999;
+            background: rgba(4, 4, 10, .97);
+            border: 1px solid rgba(196, 151, 58, .2);
+            padding: .9rem 2.2rem;
+            font-family: 'Space Mono', monospace;
+            font-size: .5rem;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            color: var(--paper);
+            opacity: 0;
+            transition: all .4s cubic-bezier(.22, 1, .36, 1);
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            white-space: nowrap
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1
+        }
+
+        .tpbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: var(--red);
+            animation: tpb 3s linear forwards
+        }
+
+        @keyframes tpb {
+            from {
+                width: 100%
+            }
+
+            to {
+                width: 0
+            }
+        }
+
+        @media print {
+            body>*:not(#print-modal) {
+                display: none !important
+            }
+
+            #print-modal {
+                display: block !important;
+                position: static;
+                background: none;
+                backdrop-filter: none
+            }
+
+            .pm-actions,
+            .pm-inner>*:not(#comanda) {
+                display: none !important
+            }
+
+            #comanda {
+                width: 72mm;
+                margin: 0 auto
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cur"></div>
+    <div id="cur-ring"></div>
+    <canvas id="bg-cv"></canvas>
+    <div id="toast"><span id="toast-ico">✦</span><span id="toast-msg"></span></div>
+    <div class="overlay" id="overlay" onclick="closeCart()"></div>
+
+    <!-- ══════════════════════════════════════
+     PRINT MODAL
+══════════════════════════════════════ -->
+    <div id="print-modal">
+        <div class="pm-inner">
+            <div id="comanda"><!-- preenchido por JS --></div>
+            <div class="pm-actions">
+                <button class="pm-act pm-print" onclick="doPrint()">🖨 Imprimir Comanda</button>
+                <button class="pm-act pm-close" onclick="closePrint()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+     SCREEN 0 — INTRO
+══════════════════════════════════════ -->
+    <div class="screen active" id="sc-intro">
+        <div class="intro-bg"></div>
+        <div class="intro-lines">
+            <div class="iline"></div>
+            <div class="iline"></div>
+            <div class="iline"></div>
+        </div>
+        <div class="intro-inner"
+            style="position:relative;z-index:5;text-align:center;padding:2rem;max-width:700px;margin:auto">
+            <div class="intro-jp"
+                style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;font-family:'Noto Serif JP',serif;font-size:clamp(5rem,12vw,9rem);font-weight:200;color:rgba(244,238,228,.04);letter-spacing:.08em;white-space:nowrap">
+                江 嶋</div>
+            <div class="intro-logo">EGI<em>M</em>A</div>
+            <span class="intro-tagline">江嶋 — Restaurante Japonês</span>
+            <div class="intro-divider"></div>
+            <p class="intro-desc"
+                style="opacity:0;animation:sIn .8s ease 1s forwards;font-style:italic;font-size:.95rem;color:rgba(244,238,228,.35);margin-bottom:2rem;line-height:1.9">
+                Sistema integrado de pedidos · Da mesa à cozinha<br>
+                <small style="font-size:.75rem;letter-spacing:.05em">Selecione seu perfil para continuar</small>
+            </p>
+            <div class="role-grid" style="opacity:0;animation:sIn .8s ease 1.2s forwards">
+                <div class="role-card" onclick="enterCliente()">
+                    <span class="role-icon">📱</span>
+                    <span class="role-title">Cliente</span>
+                    <p class="role-desc">Faça seu pedido pelo cardápio digital direto da mesa</p>
+                </div>
+                <div class="role-card" onclick="enterGarcom()">
+                    <span class="role-icon">🧾</span>
+                    <span class="role-title">Garçom</span>
+                    <p class="role-desc">Gerencie pedidos, confirme e envie comandas à cozinha</p>
+                </div>
+                <div class="role-card" onclick="enterCozinha()">
+                    <span class="role-icon">👨‍🍳</span>
+                    <span class="role-title">Cozinha</span>
+                    <p class="role-desc">Visualize tickets em tempo real e gerencie o preparo</p>
+                </div>
+            </div>
+            <div class="role-mesa-row" style="opacity:0;animation:sIn .8s ease 1.4s forwards;margin-top:1.8rem">
+                <p>Número da Mesa (cliente)</p>
+                <div class="mesa-input-group">
+                    <input type="text" id="mesa-inp" placeholder="01" maxlength="4"
+                        oninput="this.value=this.value.replace(/\D/g,'')">
+                    <button onclick="enterCliente()">Entrar no Cardápio →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+     SCREEN 1 — CLIENTE
+══════════════════════════════════════ -->
+    <div class="screen" id="sc-cliente">
+        <div class="topbar">
+            <button class="tb-brand" onclick="goIntro()">
+                <span class="tb-egima">EGIMA</span>
+                <span class="tb-sub">Cardápio Digital</span>
+            </button>
+            <span class="tb-mesa">Mesa <span id="tb-mesa-n">—</span></span>
+            <div class="tb-right">
+                <button class="tb-btn" onclick="enterGarcom()">Garçom</button>
+                <div class="cart-wrap">
+                    <button class="tb-btn primary" onclick="toggleCart()">🛒 Pedido</button>
+                    <div class="cart-dot" id="cart-dot">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="menu-wrap">
+            <!-- SIDEBAR -->
+            <aside class="msidebar">
+                <p class="msidebar-lbl">Cardápio</p>
+                <button class="mcat on" onclick="scrollSec('sushi')" id="mc-sushi"><span
+                        class="mcat-ico">🍣</span><span><span class="mcat-name">Sushi & Sashimi</span><span
+                            class="mcat-jp">寿司・刺身</span></span><span class="mcat-n">8</span></button>
+
+                <button class="mcat" onclick="scrollSec('ramen')" id="mc-ramen"><span
+                        class="mcat-ico">🍜</span><span><span class="mcat-name">Ramen & Udon</span><span
+                            class="mcat-jp">ラーメン</span></span><span class="mcat-n">5</span></button>
+
+                <button class="mcat" onclick="scrollSec('tempura')" id="mc-tempura"><span
+                        class="mcat-ico">🍤</span><span><span class="mcat-name">Tempura</span><span
+                            class="mcat-jp">天ぷら</span></span><span class="mcat-n">4</span></button>
+                <button class="mcat" onclick="scrollSec('grelhados')" id="mc-grelhados"><span
+                        class="mcat-ico">🥩</span><span><span class="mcat-name">Grelhados</span><span
+                            class="mcat-jp">焼き物</span></span><span class="mcat-n">4</span></button>
+
+                <button class="mcat" onclick="scrollSec('entradas')" id="mc-entradas"><span
+                        class="mcat-ico">🥟</span><span><span class="mcat-name">Entradas</span><span
+                            class="mcat-jp">前菜</span></span><span class="mcat-n">5</span></button>
+
+                <button class="mcat" onclick="scrollSec('sobremesas')" id="mc-sobremesas"><span
+                        class="mcat-ico">🍡</span><span><span class="mcat-name">Sobremesas</span><span
+                            class="mcat-jp">デザート</span></span><span class="mcat-n">4</span></button>
+
+                <button class="mcat" onclick="scrollSec('bebidas')" id="mc-bebidas"><span
+                        class="mcat-ico">🍶</span><span><span class="mcat-name">Bebidas</span><span
+                            class="mcat-jp">飲み物</span></span><span class="mcat-n">6</span></button>
+            </aside>
+            <!-- SCROLL -->
+            <div class="mscroll" id="mscroll">
+                <div class="mhero">
+                    <div class="mhero-jp">江嶋料理</div>
+                    <div class="mhero-content">
+                        <div class="mhero-tag">Mesa <span id="hero-mesa">—</span></div>
+                        <h1 class="mhero-title">Cardápio <em>Egima</em></h1>
+                        <p class="mhero-sub">Culinária japonesa autêntica — ingredientes frescos, técnica ancestral</p>
+                    </div>
+                </div>
+                <div class="msearch">
+                    <input type="text" placeholder="Buscar prato, ingrediente..." id="msearch"
+                        oninput="filterCards(this.value)">
+                    <div class="filter-row">
+                        <button class="fpill on" onclick="setFilt('all',this)">Todos</button>
+                        <button class="fpill" onclick="setFilt('chef',this)">🌟 Chef</button>
+                        <button class="fpill" onclick="setFilt('spicy',this)">🌶 Picante</button>
+                        <button class="fpill" onclick="setFilt('veg',this)">🌿 Vegano</button>
+                        <button class="fpill" onclick="setFilt('new',this)">✦ Novidade</button>
+                    </div>
+                </div>
+                <div id="menu-secs"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CART PANEL -->
+    <div id="cart-panel">
+        <div class="cp-hd">
+            <div>
+                <div class="cp-ht">Meu Pedido</div><span class="cp-hs">御注文 — Gochūmon</span>
+            </div>
+            <button class="cp-hclose" onclick="closeCart()">✕</button>
+        </div>
+        <div class="cp-body" id="cp-body">
+            <div class="cp-empty"><span>🍱</span>Seu pedido está vazio.</div>
+        </div>
+        <div class="cp-mesa-blk">
+            <label class="cp-ml">Número da Mesa</label>
+            <input class="cp-mi" type="text" id="cp-mesa" placeholder="Ex: 07" maxlength="4">
+        </div>
+        <div class="cp-obs-blk">
+            <label class="cp-obs-lbl">Observação Geral do Pedido</label>
+            <textarea class="cp-obs-ta" id="cp-obs" rows="2"
+                placeholder="Alguma alergia, preferência geral..."></textarea>
+        </div>
+        <div class="cp-foot">
+            <div class="cp-sub"><span class="cp-sl">Subtotal</span><span class="cp-sv" id="cp-sub">R$ 0,00</span></div>
+            <div class="cp-tot"><span class="cp-tl">Total</span><span class="cp-tv" id="cp-tot">R$ 0,00</span></div>
+            <button class="send-btn" id="send-btn" onclick="sendOrder()" disabled>✦ &nbsp; Enviar à Cozinha</button>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+     SCREEN 2 — GARÇOM
+══════════════════════════════════════ -->
+    <div class="screen" id="sc-garcom">
+        <div class="topbar">
+            <button class="tb-brand" onclick="goIntro()"
+                style="background:none;border:none;color:var(--paper);cursor:none">
+                <span class="tb-egima">EGIMA</span>
+                <span class="tb-sub">Painel do Garçom</span>
+            </button>
+            <div class="tb-right">
+                <button class="tb-btn" onclick="enterCliente()">Cardápio</button>
+                <button class="tb-btn" onclick="enterCozinha()">Cozinha</button>
+            </div>
+        </div>
+        <div class="gp-body" id="gp-body">
+            <div class="gp-stats">
+                <div class="gstat">
+                    <div class="gstat-val" id="gs-pending">0</div>
+                    <div class="gstat-lbl">Aguardando <em>confirmação</em></div>
+                </div>
+                <div class="gstat">
+                    <div class="gstat-val" id="gs-cooking">0</div>
+                    <div class="gstat-lbl">Em <em>preparo</em></div>
+                </div>
+                <div class="gstat">
+                    <div class="gstat-val" id="gs-ready">0</div>
+                    <div class="gstat-lbl">Prontos para <em>servir</em></div>
+                </div>
+                <div class="gstat">
+                    <div class="gstat-val" id="gs-today">0</div>
+                    <div class="gstat-lbl">Pedidos <em>hoje</em></div>
+                </div>
+            </div>
+            <div class="gp-grid" id="gp-grid">
+                <div class="gp-empty"><span>🧾</span>Nenhum pedido recebido ainda.<br><small
+                        style="font-size:.82rem;opacity:.5">Os pedidos dos clientes aparecerão aqui.</small></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+     SCREEN 3 — COZINHA
+══════════════════════════════════════ -->
+    <div class="screen" id="sc-cozinha">
+        <div class="kds-topbar">
+            <div class="kds-brand">
+                <span class="kds-egima">EGIMA</span>
+                <div>
+                    <div class="kds-label">Kitchen Display System</div>
+                    <div
+                        style="font-family:'Space Mono',monospace;font-size:.33rem;letter-spacing:.3em;color:rgba(184,50,50,.35);margin-top:.15rem;text-transform:uppercase">
+                        調理場システム</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:1.5rem">
+                <div class="kds-live">
+                    <div class="kds-dot"></div>Sistema Online
+                </div>
+                <div class="kds-clock" id="kds-clock">--:--:--</div>
+                <button class="tb-btn" onclick="goIntro()">← Início</button>
+            </div>
+        </div>
+        <div class="kds-tabs">
+            <button class="ktab on" onclick="kdsTab('pending',this)">🔴 Pendentes <span class="ktab-n"
+                    id="ktn-pending">0</span></button>
+            <button class="ktab" onclick="kdsTab('cooking',this)">🟠 Preparando <span class="ktab-n"
+                    id="ktn-cooking">0</span></button>
+            <button class="ktab" onclick="kdsTab('ready',this)">🟢 Prontos <span class="ktab-n"
+                    id="ktn-ready">0</span></button>
+            <button class="ktab" onclick="kdsTab('delivered',this)">✓ Entregues <span class="ktab-n"
+                    id="ktn-delivered">0</span></button>
+        </div>
+        <div class="kds-content">
+            <div class="kds-grid" id="kds-grid">
+                <div class="kds-empty"><span>🍽</span>Aguardando pedidos...<br><small
+                        style="font-size:.8rem;opacity:.5">Os pedidos confirmados pelo garçom aparecerão aqui.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ════════════════════════════════
+        // CANVAS PARTICLES
+        // ════════════════════════════════
+        const bgcv = document.getElementById('bg-cv');
+        const bgctx = bgcv.getContext('2d');
+        let W, H, pts = [];
+        function rCv() { W = bgcv.width = innerWidth; H = bgcv.height = innerHeight }
+        rCv(); addEventListener('resize', rCv);
+        class Pt {
+            constructor() { this.reset() }
+            reset() { this.x = Math.random() * W; this.y = H + Math.random() * 50; this.r = Math.random() * 3 + .5; this.vy = -(Math.random() * .35 + .1); this.vx = Math.random() * .4 - .2; this.a = Math.random() * .08 + .02; this.col = Math.random() > .5 ? `rgba(196,151,58,` : `rgba(255,183,197,`; }
+            step() { this.y += this.vy; this.x += this.vx; if (this.y < -20 || this.x < -20 || this.x > W + 20) this.reset(); }
+            draw() { bgctx.save(); bgctx.globalAlpha = this.a; bgctx.fillStyle = this.col + '.9)'; bgctx.beginPath(); bgctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); bgctx.fill(); bgctx.restore(); }
+        }
+        for (let i = 0; i < 60; i++) { const p = new Pt(); p.y = Math.random() * H; pts.push(p); }
+        function loop() { bgctx.clearRect(0, 0, W, H); pts.forEach(p => { p.step(); p.draw(); }); requestAnimationFrame(loop); } loop();
+
+        // CURSOR
+        const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+        let mx = 0, my = 0, rx = 0, ry = 0;
+        addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cur.style.left = mx + 'px'; cur.style.top = my + 'px'; });
+        function animCur() { rx += (mx - rx) * .12; ry += (my - ry) * .12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animCur); } animCur();
+
+        // ════════════════════════════════
+        // DATA
+        // ════════════════════════════════
+        const MENU = [
+            {
+                id: 'sushi', name: 'Sushi & Sashimi', jp: '寿司・刺身', ico: '🍣', items: [
+                    { id: 's1', name: 'Temaki Salmão', jp: 'サーモン手巻き', price: 32, desc: 'Cone de alga nori com arroz temperado, salmão fresco e cream cheese.', img: 'https://static.itdg.com.br/images/1200-675/774375583e3775acf3328a7c7a0a0470/303152-original.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Cream Cheese'] },
+                    { id: 's2', name: 'Sashimi Premium', jp: '刺身プレミアム', price: 78, desc: 'Fatias selecionadas de atum, salmão e robalo com daikon e wasabi fresco.', img: 'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Atum', 'Salmão', 'Robalo'] },
+                    { id: 's3', name: 'Uramaki Philadelphia', jp: 'フィラデルフィア', price: 42, desc: 'Roll invertido com salmão, cream cheese, pepino e gergelim dourado.', img: 'https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400&q=70', tags: [], meta: ['Salmão', 'Pepino'] },
+                    { id: 's4', name: 'Nigiri Atum', jp: 'まぐろ握り', price: 58, desc: 'Bolinhos de arroz com atum rubro, wasabi e shoyu da casa.', img: 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Atum', 'Wasabi'] },
+                    { id: 's5', name: 'Rainbow Roll', jp: 'レインボーロール', price: 65, desc: 'Uramaki coberto com salmão, atum, robalo e linguado.', img: 'https://www.tasteatlas.com/images/dishes/8082ea9f08b94119b0110ccd40a5e2ea.jpg', badge: 'chef', tags: ['chef'], meta: ['Salmão', 'Atum'] },
+                    { id: 's6', name: 'Hotate Sashimi', jp: 'ホタテ刺身', price: 72, desc: 'Vieiras frescas fatiadas com ponzu cítrico, cebolinhas e flor de sal.', img: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Vieiras', 'Ponzu'] },
+                    { id: 's7', name: 'Dragon Roll', jp: 'ドラゴンロール', price: 68, desc: 'Camarão empanado, abacate, coberto com salmão e molho agridoce.', img: 'https://thesushiman.com/wp-content/uploads/2025/01/Dragon-Roll-1-scaled.jpg', badge: 'spicy', tags: ['spicy'], meta: ['Camarão', 'Abacate'] },
+                    { id: 's8', name: 'Gunkan Ouriço', jp: 'うにぐんかん', price: 85, desc: 'Gunkan com ouriço do mar fresco (uni) sobre arroz de sushi.', img: 'https://media-cdn.tripadvisor.com/media/photo-s/07/b0/e4/07/uni-sushi.jpg', badge: 'chef', tags: ['chef'], meta: ['Uni', 'Nori'] },
+                ]
+            },
+            {
+                id: 'ramen', name: 'Ramen & Udon', jp: 'ラーメン・うどん', ico: '🍜', items: [
+                    { id: 'r1', name: 'Tonkotsu Egima', jp: '骨董スープ', price: 48, desc: 'Caldo de osso suíno cozido 18h, chashu, ovo marinado e nori.', img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Porco', 'Ovo'] },
+                    { id: 'r2', name: 'Shio Ramen', jp: '塩ラーメン', price: 44, desc: 'Caldo claro de frango e algas, frango desfiado e broto de feijão.', img: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?w=400&q=70', tags: [], meta: ['Frango', 'Alga'] },
+                    { id: 'r3', name: 'Miso Picante', jp: '辛味噌', price: 46, desc: 'Base de missô vermelho com togarashi, cogumelos shiitake e manteiga de alho.', img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=70', badge: 'spicy', tags: ['spicy'], meta: ['Missô', 'Shiitake'] },
+                    { id: 'r4', name: 'Kitsune Udon', jp: 'きつねうどん', price: 38, desc: 'Macarrão udon em caldo dashi suave com tofu frito e cebolinha.', img: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=70', tags: ['veg'], meta: ['Udon', 'Tofu'] },
+                    { id: 'r5', name: 'Black Garlic Ramen', jp: '黒にんにく', price: 52, desc: 'Tonkotsu com óleo de alho negro, barriga de porco e ovo de soja.', img: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Alho Negro'] },
+                ]
+            },
+            {
+                id: 'tempura', name: 'Tempura', jp: '天ぷら', ico: '🍤', items: [
+                    { id: 't1', name: 'Tempura Misto', jp: '天ぷら盛り合わせ', price: 54, desc: 'Camarão, abobrinha, batata-doce, cogumelo em massa leve e crocante.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Camarão', 'Legumes'] },
+                    { id: 't2', name: 'Tempura Ebi', jp: 'えび天ぷら', price: 58, desc: 'Quatro camarões tigre em tempura com molho tentsuyu e daikon.', img: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400&q=70', tags: [], meta: ['Camarão'] },
+                    { id: 't3', name: 'Yasai Tempura', jp: '野菜天ぷら', price: 42, desc: 'Legumes sazonais orgânicos em tempura leve — totalmente vegetariano.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', tags: ['veg'], meta: ['Vegano', 'Orgânico'] },
+                    { id: 't4', name: 'Tenzaru Soba', jp: '天ざるそば', price: 56, desc: 'Macarrão soba gelado com tempura de camarão e caldo frio de dashi.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Soba', 'Camarão'] },
+                ]
+            },
+            {
+                id: 'grelhados', name: 'Grelhados', jp: '焼き物', ico: '🥩', items: [
+                    { id: 'g1', name: 'Wagyu A5 Donburi', jp: '和牛丼', price: 145, desc: 'Wagyu grau A5 fatiado sobre arroz japonês com cebola caramelizada e gema.', img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Wagyu A5', 'Trufa'] },
+                    { id: 'g2', name: 'Yakitori Egima', jp: '焼き鳥', price: 62, desc: 'Espetinhos de frango grelhados em carvão binchōtan.', img: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=70', tags: [], meta: ['Frango', 'Tare'] },
+                    { id: 'g3', name: 'Buri Shioyaki', jp: 'ぶり塩焼き', price: 68, desc: 'Filé grelhado com sal marinho, daikon e limão siciliano.', img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=70', tags: [], meta: ['Peixe', 'Daikon'] },
+                    { id: 'g4', name: 'Niku Maki Roll', jp: '肉巻きロール', price: 72, desc: 'Rolinho de carne com shimeji, aspargos e teriyaki da casa.', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=70', badge: 'spicy', tags: ['spicy'], meta: ['Carne', 'Teriyaki'] },
+                ]
+            },
+            {
+                id: 'entradas', name: 'Entradas', jp: '前菜', ico: '🥟', items: [
+                    { id: 'e1', name: 'Gyoza ao Vapor', jp: '餃子蒸し', price: 34, desc: 'Dumplings de frango e gengibre no vapor com ponzu de yuzu.', img: 'https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=400&q=70', badge: 'chef', tags: ['chef'], meta: ['Frango', 'Yuzu'] },
+                    { id: 'e2', name: 'Edamame Trufa', jp: '枝豆トリュフ', price: 28, desc: 'Edamame no vapor com manteiga de trufa branca e sal defumado.', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=70', tags: ['veg'], meta: ['Vegano', 'Trufa'] },
+                    { id: 'e3', name: 'Chawanmushi', jp: '茶碗蒸し', price: 36, desc: 'Pudim de ovo salgado a vapor com camarão e cogumelo.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', tags: [], meta: ['Ovo', 'Camarão'] },
+                    { id: 'e4', name: 'Agedashi Tofu', jp: '揚げ出し豆腐', price: 32, desc: 'Tofu frito em panko, caldo tentsuyu quente e katsuobushi.', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=70', tags: ['veg'], meta: ['Tofu'] },
+                    { id: 'e5', name: 'Karaage Negi', jp: '唐揚げ', price: 38, desc: 'Frango crocante marinado em shoyu e gengibre, maionese de yuzu.', img: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Frango', 'Yuzu'] },
+                ]
+            },
+            {
+                id: 'sobremesas', name: 'Sobremesas', jp: 'デザート', ico: '🍡', items: [
+                    { id: 'd1', name: 'Mochi Artesanal', jp: '大福餅', price: 26, desc: 'Bolinho de arroz com pasta de feijão e sorvete de matchá.', img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&q=70', badge: 'chef', tags: ['chef', 'veg'], meta: ['Matchá', 'Azuki'] },
+                    { id: 'd2', name: 'Taiyaki Creme', jp: '鯛焼き', price: 22, desc: 'Biscoito em forma de peixe com creme de baunilha e pasta de azuki.', img: 'https://images.unsplash.com/photo-1484980972926-edee96e0960d?w=400&q=70', tags: ['veg'], meta: ['Creme', 'Azuki'] },
+                    { id: 'd3', name: 'Parfait Matcha', jp: '抹茶パフェ', price: 34, desc: 'Sorvete de matchá, anmitsu, geleia de kanten e chantilly.', img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&q=70', badge: 'new', tags: ['new', 'veg'], meta: ['Matchá'] },
+                    { id: 'd4', name: 'Kakigori Premium', jp: 'かき氷', price: 30, desc: 'Raspado com calda de ume, creme de condensado e frutas vermelhas.', img: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&q=70', tags: ['veg'], meta: ['Ume', 'Frutas'] },
+                ]
+            },
+            {
+                id: 'bebidas', name: 'Bebidas', jp: '飲み物', ico: '🍶', items: [
+                    { id: 'b1', name: 'Coca-Cola', jp: 'コカ・コーラ', price: 9, desc: 'Refrigerante clássico com gás e sabor original.', img: 'https://bretas.vtexassets.com/arquivos/ids/182902/6571be2b558925a4e8897b39.jpg?v=638375498715330000', badge: 'chef', tags: ['chef'], meta: ['Coca-Cola'] },
+                    { id: 'b2', name: 'Água com gás', jp: '炭酸水', price: 8, desc: 'Água mineral com gás e sabor natural.', img: 'https://www.imigrantesbebidas.com.br/bebida/images/products/full/2894-agua-mineral-crystal-com-gas-500ml.jpg', tags: ['veg'], meta: ['Água'] },
+                    { id: 'b3', name: 'Ramune Original', jp: 'ラムネ', price: 14, desc: 'Refrigerante japonês Ramune com bolinha de gude na garrafa.', img: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&q=70', tags: [], meta: ['Japão'] },
+                    { id: 'b4', name: 'Yuzu Sour', jp: 'ゆずサワー', price: 36, desc: 'Shochu, suco de yuzu fresco, água com gás e toque de wasabi.', img: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&q=70', badge: 'new', tags: ['new'], meta: ['Yuzu', 'Shochu'] },
+                    { id: 'b5', name: 'Hojicha Gelado', jp: 'ほうじ茶', price: 16, desc: 'Chá verde tostado em infusão a frio, levemente caramelado.', img: 'https://static.vecteezy.com/ti/fotos-gratis/p2/22664675-gelado-verde-japones-hojicha-cha-dentro-copos-e-folhas-dentro-uma-tigela-em-a-mesa-foto.jpg', tags: ['veg'], meta: ['Chá'] },
+                    { id: 'b6', name: 'Umeshu Cocktail', jp: '梅酒カクテル', price: 32, desc: 'Licor de ameixa japonesa com soda e fatias frescas de ume.', img: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&q=70', tags: [], meta: ['Ume', 'Shochu'] },
+                ]
+            },
+        ];
+
+        // ════════════════════════════════
+        // STATE
+        // ════════════════════════════════
+        let cart = {};
+        let mesa = '';
+        let orders = [];
+        let orderIdCounter = 1;
+        let timers = {};
+        let kdsCurrentTab = 'pending';
+        let builtMenu = false;
+        let kdsClockInterval = null;
+
+        function findItem(id) { for (const c of MENU) for (const it of c.items) if (it.id === id) return it; return null; }
+
+        // ════════════════════════════════
+        // NAVIGATION
+        // ════════════════════════════════
+        function showSc(id) {
+            document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active', 'fade-in'); });
+            const s = document.getElementById(id);
+            s.classList.add('active', 'fade-in');
+        }
+        function goIntro() { showSc('sc-intro'); }
+        function enterCliente() {
+            const v = document.getElementById('mesa-inp').value.trim();
+            if (v) mesa = v.padStart(2, '0');
+            if (!builtMenu) { buildMenu(); builtMenu = true; }
+            updateMesaDisplay();
+            showSc('sc-cliente');
+        }
+        function enterGarcom() { renderGarcom(); showSc('sc-garcom'); }
+        function enterCozinha() { renderKDS(); startKdsClock(); showSc('sc-cozinha'); }
+
+        // ════════════════════════════════
+        // BUILD MENU
+        // ════════════════════════════════
+        function buildMenu() {
+            let html = '';
+            MENU.forEach((cat, ci) => {
+                if (ci > 0) html += `<div class="msec-divider"></div>`;
+                html += `<section class="msec" id="sec-${cat.id}">
+      <div class="msec-head">
+        <div class="msec-left"><span class="msec-ico">${cat.ico}</span>
+          <h2 class="msec-name">${cat.name} <span class="msec-jp">${cat.jp}</span></h2>
+        </div>
+        <span class="msec-count">${cat.items.length} itens</span>
+      </div>
+      <div class="mgrid" id="grid-${cat.id}">`;
+                cat.items.forEach(it => { html += buildCard(it, cat.id); });
+                html += `</div></section>`;
+            });
+            document.getElementById('menu-secs').innerHTML = html;
+            setupScrollSpy();
+        }
+        function buildCard(item, catId) {
+            let badge = '';
+            if (item.badge === 'chef') badge = `<span class="mcard-badge badge-c">🌟 Chef</span>`;
+            else if (item.badge === 'new') badge = `<span class="mcard-badge badge-n">✦ Novo</span>`;
+            else if (item.badge === 'spicy') badge = `<span class="mcard-badge badge-s">🌶</span>`;
+            const metas = (item.meta || []).map(m => `<span class="mtag">${m}</span>`).join('');
+            return `<div class="mcard" id="card-${item.id}" data-tags="${(item.tags || []).join(' ')}">
+    <div class="mcard-img">
+      <img src="${item.img}" alt="${item.name}" loading="lazy">
+      <div class="mcard-fade"></div><div class="mcard-shimmer"></div>
+      ${badge}
+    </div>
+    <div class="mcard-body">
+      <span class="mcard-cat">${catId}</span>
+      <div class="mcard-name">${item.name}</div>
+      <span class="mcard-jp">${item.jp}</span>
+      <p class="mcard-desc">${item.desc}</p>
+      <div class="mcard-tags">${metas}</div>
+      <div class="mcard-footer">
+        <div class="mcard-price"><small>R$</small>${item.price.toFixed(2).replace('.', ',')}</div>
+        <div class="add-zone">
+          <div class="qctrl" id="qc-${item.id}">
+            <button class="qb" onclick="cqty('${item.id}',-1)">−</button>
+            <span class="qn" id="qn-${item.id}">0</span>
+            <button class="qb" onclick="cqty('${item.id}',1)">+</button>
+          </div>
+          <button class="addbtn" id="ab-${item.id}" onclick="addItem('${item.id}')">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="mcard-note" id="mn-${item.id}">
+      <textarea rows="2" placeholder="Observação (sem cebola, alergia...)" onchange="setNote('${item.id}',this.value)"></textarea>
+    </div>
+  </div>`;
+        }
+
+        // ════════════════════════════════
+        // CART
+        // ════════════════════════════════
+        function addItem(id) {
+            if (!cart[id]) { cart[id] = { qty: 1, note: '', id }; }
+            else { cart[id].qty++; }
+            document.getElementById('ab-' + id).textContent = '✓';
+            document.getElementById('ab-' + id).classList.add('in');
+            document.getElementById('qc-' + id).classList.add('vis');
+            document.getElementById('mn-' + id).classList.add('show');
+            updateQD(id); updateCartUI();
+            showToast('✦', 'Adicionado ao pedido!');
+        }
+        function cqty(id, d) {
+            if (!cart[id]) return;
+            cart[id].qty += d;
+            if (cart[id].qty <= 0) {
+                delete cart[id];
+                document.getElementById('ab-' + id).textContent = '+'; document.getElementById('ab-' + id).classList.remove('in');
+                document.getElementById('qc-' + id).classList.remove('vis'); document.getElementById('mn-' + id).classList.remove('show');
+                const qn = document.getElementById('qn-' + id); if (qn) qn.textContent = '0';
+            } else { updateQD(id); }
+            updateCartUI();
+        }
+        function updateQD(id) { const el = document.getElementById('qn-' + id); if (el && cart[id]) el.textContent = cart[id].qty; }
+        function setNote(id, v) { if (cart[id]) cart[id].note = v; }
+        function getTotal() { return Object.entries(cart).reduce((s, [id, e]) => { const it = findItem(id); return s + (it ? it.price * e.qty : 0); }, 0); }
+        function updateCartUI() {
+            const cnt = Object.values(cart).reduce((s, e) => s + e.qty, 0);
+            const dot = document.getElementById('cart-dot');
+            dot.textContent = cnt; dot.className = 'cart-dot' + (cnt > 0 ? ' show' : '');
+            const tot = getTotal();
+            document.getElementById('cp-sub').textContent = 'R$ ' + tot.toFixed(2).replace('.', ',');
+            document.getElementById('cp-tot').textContent = 'R$ ' + tot.toFixed(2).replace('.', ',');
+            document.getElementById('send-btn').disabled = cnt === 0;
+        }
+        function toggleCart() {
+            const p = document.getElementById('cart-panel'), ov = document.getElementById('overlay');
+            p.classList.toggle('open'); ov.classList.toggle('show');
+            if (p.classList.contains('open')) renderCart();
+        }
+        function closeCart() { document.getElementById('cart-panel').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+        function renderCart() {
+            const body = document.getElementById('cp-body');
+            const entries = Object.entries(cart);
+            if (!entries.length) { body.innerHTML = '<div class="cp-empty"><span>🍱</span>Seu pedido está vazio.</div>'; return; }
+            let html = '';
+            entries.forEach(([id, e]) => {
+                const it = findItem(id); if (!it) return;
+                html += `<div class="cp-item">
+      <img class="cp-iimg" src="${it.img}" alt="${it.name}">
+      <div class="cp-iinfo">
+        <div class="cp-iname">${it.name}</div>
+        ${e.note ? `<div class="cp-inote">${e.note}</div>` : ''}
+        <div class="cp-ictrl">
+          <button class="cpqb" onclick="cpQty('${id}',-1)">−</button>
+          <span class="cpqn">${e.qty}</span>
+          <button class="cpqb" onclick="cpQty('${id}',1)">+</button>
+        </div>
+      </div>
+      <span class="cp-ipr">R$ ${(it.price * e.qty).toFixed(2).replace('.', ',')}</span>
+      <button class="cp-irm" onclick="cpQty('${id}',-999)">✕</button>
+    </div>`;
+            });
+            body.innerHTML = html;
+            const mi = document.getElementById('cp-mesa');
+            if (mi && mesa) mi.value = mesa;
+        }
+        function cpQty(id, d) {
+            if (d === -999) { delete cart[id]; resetCard(id); }
+            else { if (!cart[id]) return; cart[id].qty += d; if (cart[id].qty <= 0) { delete cart[id]; resetCard(id); } else { updateQD(id); } }
+            updateCartUI(); renderCart();
+        }
+        function resetCard(id) {
+            const ab = document.getElementById('ab-' + id); if (ab) { ab.textContent = '+'; ab.classList.remove('in'); }
+            const qc = document.getElementById('qc-' + id); if (qc) qc.classList.remove('vis');
+            const qn = document.getElementById('qn-' + id); if (qn) qn.textContent = '0';
+            const mn = document.getElementById('mn-' + id); if (mn) mn.classList.remove('show');
+        }
+        function updateMesaDisplay() {
+            document.getElementById('tb-mesa-n').textContent = mesa || '—';
+            document.getElementById('hero-mesa').textContent = mesa || '—';
+            const cm = document.getElementById('cp-mesa'); if (cm && mesa) cm.value = mesa;
+        }
+
+        // ════════════════════════════════
+        // SEND ORDER
+        // ════════════════════════════════
+        function sendOrder() {
+            const m = document.getElementById('cp-mesa').value || mesa || '?';
+            mesa = m.padStart(2, '0');
+            const obsGeral = document.getElementById('cp-obs').value || '';
+            if (!Object.keys(cart).length) return;
+            const order = {
+                id: orderIdCounter++,
+                mesa,
+                status: 'pending',
+                time: new Date(),
+                elapsed: 0,
+                obsGeral,
+                items: Object.entries(cart).map(([id, e]) => {
+                    const it = findItem(id);
+                    return { id, name: it ? it.name : '?', jp: it ? it.jp : '', price: it ? it.price : 0, qty: e.qty, note: e.note };
+                }),
+                total: getTotal(),
+            };
+            orders.push(order);
+            startTimer(order);
+            // clear cart UI
+            Object.keys(cart).forEach(id => resetCard(id));
+            cart = {};
+            document.getElementById('cp-obs').value = '';
+            updateCartUI(); closeCart(); updateMesaDisplay();
+            showToast('✅', 'Pedido enviado! O garçom confirmará em breve.');
+        }
+
+        // ════════════════════════════════
+        // TIMER
+        // ════════════════════════════════
+        function startTimer(order) {
+            timers[order.id] = setInterval(() => {
+                order.elapsed++;
+                // Update ticket timer if visible
+                const el = document.querySelector(`[data-timer="${order.id}"]`);
+                if (el) {
+                    const m = Math.floor(order.elapsed / 60), s = order.elapsed % 60;
+                    el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                    el.className = 't-timer ' + (order.elapsed < 300 ? 't-fresh' : order.elapsed < 600 ? 't-warn' : 't-urgent');
+                }
+            }, 1000);
+        }
+        function stopTimer(id) { if (timers[id]) { clearInterval(timers[id]); delete timers[id]; } }
+
+        // ════════════════════════════════
+        // GARÇOM PANEL
+        // ════════════════════════════════
+        function renderGarcom() {
+            const grid = document.getElementById('gp-grid');
+            document.getElementById('gs-pending').textContent = orders.filter(o => o.status === 'pending').length;
+            document.getElementById('gs-cooking').textContent = orders.filter(o => o.status === 'cooking').length;
+            document.getElementById('gs-ready').textContent = orders.filter(o => o.status === 'ready').length;
+            document.getElementById('gs-today').textContent = orders.length;
+            if (!orders.length) {
+                grid.innerHTML = '<div class="gp-empty"><span>🧾</span>Nenhum pedido ainda.<br><small style="font-size:.82rem;opacity:.5">Os pedidos dos clientes aparecerão aqui.</small></div>';
+                return;
+            }
+            grid.innerHTML = orders.slice().reverse().map(o => buildOCard(o)).join('');
+        }
+        function buildOCard(o) {
+            const statusLabels = { pending: 'Aguardando', confirmed: 'Confirmado', cooking: 'Preparando', ready: 'Pronto', delivered: 'Entregue' };
+            const t = o.time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const m = Math.floor(o.elapsed / 60), s = o.elapsed % 60;
+            const itemsHtml = o.items.map(it => `
+    <div class="ocard-row"><span class="orow-qty">${it.qty}x</span><span class="orow-name">${it.name}</span></div>
+    ${it.note ? `<div class="orow-note">${it.note}</div>` : ''}
+  `).join('');
+            let acts = '';
+            if (o.status === 'pending') {
+                acts = `<button class="oact oact-confirm" onclick="garcomAct(${o.id},'cooking')">✓ Confirmar</button>
+          <button class="oact oact-print" onclick="openPrint(${o.id})">🖨 Comanda</button>`;
+            } else if (o.status === 'cooking') {
+                acts = `<button class="oact oact-print" onclick="openPrint(${o.id})">🖨 Reimprimir</button>`;
+            } else if (o.status === 'ready') {
+                acts = `<button class="oact oact-deliver" onclick="garcomAct(${o.id},'delivered')">🛎 Entregar</button>
+          <button class="oact oact-print" onclick="openPrint(${o.id})">🖨 Comanda</button>`;
+            } else {
+                acts = `<button class="oact oact-print" onclick="openPrint(${o.id})">🖨 Reimprimir</button>`;
+            }
+            return `<div class="ocard" id="oc-${o.id}">
+    <div class="ocard-bar ${o.status}"></div>
+    <div class="ocard-hd">
+      <div>
+        <div class="ocard-mesa">Mesa ${o.mesa}</div>
+        <div class="ocard-id">Pedido #${o.id} · ${t} · ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}</div>
+      </div>
+      <span class="ocard-status status-${o.status}">${statusLabels[o.status] || o.status}</span>
+    </div>
+    <div class="ocard-items">${itemsHtml}${o.obsGeral ? `<div style="font-style:italic;font-size:.75rem;color:rgba(244,238,228,.3);margin-top:.4rem;padding-top:.4rem;border-top:1px solid rgba(196,151,58,.06)">Obs geral: ${o.obsGeral}</div>` : ''}</div>
+    <div class="ocard-ft">
+      <span class="ocard-total">R$ ${o.total.toFixed(2).replace('.', ',')}</span>
+      <div class="ocard-actions">${acts}</div>
+    </div>
+  </div>`;
+        }
+        function garcomAct(id, status) {
+            const o = orders.find(x => x.id === id); if (!o) return;
+            o.status = status;
+            if (status === 'delivered') stopTimer(id);
+            if (status === 'cooking') openPrint(id); // auto-print on confirm
+            renderGarcom(); renderKDS();
+            const msgs = { cooking: '🖨 Comanda enviada! Cozinha notificada.', ready: '✓ Pedido pronto para servir!', delivered: '🛎 Pedido entregue!' };
+            showToast('', msgs[status] || 'Atualizado');
+        }
+
+        // ════════════════════════════════
+        // COMANDA PRINT
+        // ════════════════════════════════
+        function openPrint(orderId) {
+            const o = orders.find(x => x.id === orderId); if (!o) return;
+            const t = o.time.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const itemsHtml = o.items.map(it => `
+    <div class="cmd-item">
+      <div class="cmd-item-row">
+        <span>${it.qty}x ${it.name}</span>
+        <span>R$ ${(it.price * it.qty).toFixed(2).replace('.', ',')}</span>
+      </div>
+      ${it.note ? `<div class="cmd-item-obs">${it.note}</div>` : ''}
+    </div>
+  `).join('');
+
+            // Simple QR code text art (mesa identifier)
+            const qrText = `EGIMA · MESA ${o.mesa} · #${o.id}`;
+
+            document.getElementById('comanda').innerHTML = `
+    <div class="cmd-header">
+      <div class="cmd-egima">EGIMA</div>
+      <div class="cmd-sub">江嶋 RESTAURANTE JAPONÊS</div>
+      <div style="font-size:8px;color:#999;margin-top:4px;letter-spacing:1px">COMANDA DE PEDIDO</div>
+    </div>
+    <div class="cmd-info">
+      <div class="cmd-info-row"><span>Mesa:</span><span><strong>${o.mesa}</strong></span></div>
+      <div class="cmd-info-row"><span>Pedido Nº:</span><span><strong>#${String(o.id).padStart(4, '0')}</strong></span></div>
+      <div class="cmd-info-row"><span>Data/Hora:</span><span>${t}</span></div>
+      ${o.obsGeral ? `<div class="cmd-info-row" style="margin-top:6px;border-top:1px dashed #ccc;padding-top:6px"><span>Obs geral:</span><span style="font-style:italic;color:#555;max-width:150px;text-align:right">${o.obsGeral}</span></div>` : ''}
+    </div>
+    <div class="cmd-items">
+      <div style="font-size:9px;color:#555;letter-spacing:2px;margin-bottom:6px;text-transform:uppercase">Itens do Pedido</div>
+      ${itemsHtml}
+    </div>
+    <div class="cmd-total-block">
+      <div class="cmd-total-row"><span>Subtotal</span><span>R$ ${o.total.toFixed(2).replace('.', ',')}</span></div>
+      <div class="cmd-total-row"><span>Serviço (10%)</span><span>R$ ${(o.total * .1).toFixed(2).replace('.', ',')}</span></div>
+      <div class="cmd-total-row final"><span>TOTAL</span><span>R$ ${(o.total * 1.1).toFixed(2).replace('.', ',')}</span></div>
+    </div>
+    <div class="cmd-qr">
+      <div class="cmd-qr-box">
+        ████████████<br>
+        █ ▄▄▄▄▄ █▀▄<br>
+        █ █   █ █▄█<br>
+        █ █▄▄▄█ █▀▀<br>
+        █▄▄▄▄▄▄▄█▄█<br>
+        ▀▀██▄▀▄▀ ▄▄<br>
+        ████████████<br>
+        <div style="margin-top:4px;font-size:7px;color:#555">${qrText}</div>
+      </div>
+    </div>
+    <div class="cmd-footer">
+      <div>Obrigado pela visita!</div>
+      <div style="margin-top:3px">ありがとうございました</div>
+      <div style="margin-top:3px;font-size:8px">egima.com.br</div>
+      <div style="margin-top:6px;border-top:1px dashed #ddd;padding-top:6px;font-size:8px">*** VIA COZINHA ***</div>
+    </div>
+  `;
+            document.getElementById('print-modal').classList.add('show');
+        }
+        function closePrint() { document.getElementById('print-modal').classList.remove('show'); }
+        function doPrint() { window.print(); }
+
+        // ════════════════════════════════
+        // KDS
+        // ════════════════════════════════
+        function kdsTab(tab, btn) {
+            kdsCurrentTab = tab;
+            document.querySelectorAll('.ktab').forEach(t => t.classList.remove('on'));
+            btn.classList.add('on');
+            renderKDS();
+        }
+        function renderKDS() {
+            updateKdsCounts();
+            const grid = document.getElementById('kds-grid'); if (!grid) return;
+            const filtered = orders.filter(o => o.status === kdsCurrentTab);
+            if (!filtered.length) {
+                grid.innerHTML = '<div class="kds-empty"><span>🍽</span>Nenhum pedido nesta fila.</div>'; return;
+            }
+            grid.innerHTML = filtered.map(o => buildTicket(o)).join('');
+        }
+        function buildTicket(o) {
+            const m = Math.floor(o.elapsed / 60), s = o.elapsed % 60;
+            const tc = o.elapsed < 300 ? 't-fresh' : o.elapsed < 600 ? 't-warn' : 't-urgent';
+            const t = o.time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const rows = o.items.map(it => `
+    <div class="trow"><span class="trow-q">${it.qty}x</span><span class="trow-n">${it.name}</span></div>
+    ${it.note ? `<div class="trow-obs">${it.note}</div>` : ''}
+  `).join('');
+            let acts = '';
+            if (o.status === 'pending') acts = `<button class="tact tact-start" onclick="kdsAct(${o.id},'cooking')">🔥 Iniciar</button>`;
+            else if (o.status === 'cooking') acts = `<button class="tact tact-ready" onclick="kdsAct(${o.id},'ready')">✓ Pronto</button>`;
+            else if (o.status === 'ready') acts = `<button class="tact tact-deliver" onclick="kdsAct(${o.id},'delivered')">🛎 Entregue</button>`;
+            else acts = `<span style="font-family:'Space Mono',monospace;font-size:.38rem;color:rgba(244,238,228,.25);letter-spacing:.15em">ENTREGUE ✓</span>`;
+            return `<div class="ticket ${o.status}">
+    <div class="tbar ${o.status}"></div>
+    <div class="ticket-hd">
+      <div><div class="t-mesa">Mesa ${o.mesa}</div><div class="t-id">Pedido #${o.id} · ${t}</div></div>
+      <div class="t-timer ${tc}" data-timer="${o.id}">${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}</div>
+    </div>
+    <div class="ticket-body">${rows}${o.obsGeral ? `<div class="trow-obs" style="margin-top:.3rem;border-top:1px solid rgba(196,151,58,.04);padding-top:.3rem">Obs: ${o.obsGeral}</div>` : ''}</div>
+    <div class="ticket-ft">${acts}</div>
+  </div>`;
+        }
+        function kdsAct(id, status) {
+            const o = orders.find(x => x.id === id); if (!o) return;
+            o.status = status;
+            if (status === 'delivered') stopTimer(id);
+            renderKDS(); renderGarcom();
+            const msgs = { cooking: '🔥 Preparo iniciado!', ready: '✅ Pronto para servir!', delivered: '🛎 Entregue!' };
+            showToast('', msgs[status] || '');
+        }
+        function updateKdsCounts() {
+            ['pending', 'cooking', 'ready', 'delivered'].forEach(s => {
+                const el = document.getElementById('ktn-' + s);
+                if (el) el.textContent = orders.filter(o => o.status === s).length;
+            });
+        }
+        function startKdsClock() {
+            if (kdsClockInterval) return;
+            kdsClockInterval = setInterval(() => {
+                const el = document.getElementById('kds-clock');
+                if (el) el.textContent = new Date().toLocaleTimeString('pt-BR');
+            }, 1000);
+        }
+
+        // ════════════════════════════════
+        // FILTER / SEARCH
+        // ════════════════════════════════
+        let activeFilt = 'all';
+        function setFilt(f, btn) {
+            activeFilt = f;
+            document.querySelectorAll('.fpill').forEach(p => p.classList.remove('on'));
+            btn.classList.add('on'); applyFilt();
+        }
+        function filterCards(q) { applyFilt(q); }
+        function applyFilt(q) {
+            const query = (q || document.getElementById('msearch').value || '').toLowerCase();
+            MENU.forEach(cat => {
+                let vis = 0;
+                cat.items.forEach(it => {
+                    const card = document.getElementById('card-' + it.id); if (!card) return;
+                    const ms = !query || (it.name.toLowerCase().includes(query) || it.desc.toLowerCase().includes(query) || (it.meta || []).some(m => m.toLowerCase().includes(query)));
+                    const mf = activeFilt === 'all' || ((it.tags || []).includes(activeFilt));
+                    card.style.display = (ms && mf) ? '' : 'none';
+                    if (ms && mf) vis++;
+                });
+                const sec = document.getElementById('sec-' + cat.id);
+                if (sec) sec.style.display = vis ? '' : 'none';
+            });
+        }
+        function scrollSec(id) {
+            const sec = document.getElementById('sec-' + id);
+            const scroll = document.getElementById('mscroll');
+            if (sec && scroll) scroll.scrollTo({ top: sec.offsetTop - 60, behavior: 'smooth' });
+        }
+        function setupScrollSpy() {
+            const sc = document.getElementById('mscroll'); if (!sc) return;
+            sc.addEventListener('scroll', () => {
+                let cur = 'sushi';
+                MENU.forEach(cat => { const s = document.getElementById('sec-' + cat.id); if (s && s.offsetTop - 80 <= sc.scrollTop) cur = cat.id; });
+                document.querySelectorAll('.mcat').forEach(l => l.classList.remove('on'));
+                const el = document.getElementById('mc-' + cur); if (el) el.classList.add('on');
+            });
+        }
+
+        // ════════════════════════════════
+        // TOAST
+        // ════════════════════════════════
+        let toastT = null;
+        function showToast(ico, msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-ico').textContent = ico || '✦';
+            document.getElementById('toast-msg').textContent = msg;
+            t.classList.add('show');
+            const old = t.querySelector('.tpbar'); if (old) old.remove();
+            const b = document.createElement('div'); b.className = 'tpbar'; t.appendChild(b);
+            if (toastT) clearTimeout(toastT);
+            toastT = setTimeout(() => t.classList.remove('show'), 3200);
+        }
+
+        // CART MESA sync
+        document.getElementById('cp-mesa').addEventListener('input', function () { mesa = this.value; });
+    </script>
+</body>
+
+</html>
